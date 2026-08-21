@@ -21,8 +21,11 @@
     </div>
 
     <div v-else-if="store.room?.status === 'CANCELLED'" class="empty-state">
-      <p>This room has been cancelled.</p>
-      <router-link to="/" class="btn btn-ghost btn-sm">Back home</router-link>
+      <p>This room has been cancelled. Redirecting…</p>
+    </div>
+
+    <div v-else-if="store.room?.status === 'FINISHED'" class="empty-state">
+      <p>This match has ended. Redirecting…</p>
     </div>
 
     <div v-else-if="needsToJoin" class="mx-auto w-full max-w-sm">
@@ -116,6 +119,19 @@ watch(
     () => store.leftRoom,
     (left) => {
         if (left) router.push('/');
+    },
+);
+
+// Landing on (or refreshing into) a room that's over — either it wrapped up (FINISHED) or the
+// host cancelled the lobby (CANCELLED) — bounces back home instead of stranding the player on a
+// dead room screen. Never fires for a live match ending under the player's feet: nothing updates
+// room.status to FINISHED over the socket (see room.manager.ts's startRound for why only the
+// WAITING -> IN_PROGRESS transition broadcasts room:updated), so this only ever reacts to a fresh
+// REST fetch — i.e. this player just navigated/refreshed into an already-finished room.
+watch(
+    () => store.room?.status,
+    (status) => {
+        if (status === 'CANCELLED' || status === 'FINISHED') router.push('/');
     },
 );
 
