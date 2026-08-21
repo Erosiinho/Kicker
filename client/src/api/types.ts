@@ -1,4 +1,4 @@
-export type RoomStatus = 'WAITING' | 'IN_PROGRESS' | 'FINISHED';
+export type RoomStatus = 'WAITING' | 'IN_PROGRESS' | 'FINISHED' | 'CANCELLED';
 
 export interface IRoomPlayer {
     id: number;
@@ -142,6 +142,19 @@ export interface PlayerActedPayload {
     minRaise: number;
     nextTurnUserId: number | null;
     players: PlayerState[];
+}
+
+/** Emitted whenever a departure changes the WAITING lobby's roster/status (someone left, or it was cancelled). */
+export type RoomUpdatedPayload = IRoom;
+
+/** Same shape as PlayerActedPayload — a mid-game leave is handled just like a fold. */
+export interface PlayerLeftPayload {
+    userId: number;
+    players: PlayerState[];
+    potTotal: number;
+    currentBet: number;
+    minRaise: number;
+    nextTurnUserId: number | null;
 }
 
 export interface ShowdownStartedPayload {

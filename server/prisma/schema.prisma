@@ -41,6 +41,7 @@ enum RoomStatus {
   WAITING
   IN_PROGRESS
   FINISHED
+  CANCELLED
 }
 
 model RoomPlayer {

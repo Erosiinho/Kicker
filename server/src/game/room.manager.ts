@@ -97,6 +97,15 @@ export default class RoomManager {
         await this.handleEvents(roomCode, roomId, engine, events);
     }
 
+    /** No-ops if the room's engine is already gone (round already resolved/removed). */
+    async leaveGame(roomCode: string, roomId: number, userId: number): Promise<void> {
+        const engine = this.engines.get(roomCode);
+        if (!engine) return;
+        await this.roomRepository.setPlayerActive(roomId, userId, false);
+        const events = engine.leaveGame(userId);
+        await this.handleEvents(roomCode, roomId, engine, events);
+    }
+
     private requireEngine(roomCode: string): GameEngine {
         const engine = this.engines.get(roomCode);
         if (!engine) throw new Error(`No active game for room ${roomCode}`);

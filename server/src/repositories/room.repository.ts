@@ -80,6 +80,11 @@ export default class RoomRepository {
         return this.client.roomPlayer.create({ data: { roomId, userId, seat, chips } });
     }
 
+    /** Only ever called pre-round (WAITING) — nothing references a RoomPlayer row by FK, so this is safe. */
+    async removePlayer(roomId: number, userId: number): Promise<void> {
+        await this.client.roomPlayer.delete({ where: { roomId_userId: { roomId, userId } } });
+    }
+
     async listPlayers(roomId: number): Promise<IRoomPlayer[]> {
         return this.client.roomPlayer.findMany({ where: { roomId }, orderBy: { seat: 'asc' } });
     }

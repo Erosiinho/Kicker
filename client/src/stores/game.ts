@@ -11,8 +11,10 @@ import type {
     PlayerActedPayload,
     PlayerActionType,
     PlayerGuessedPayload,
+    PlayerLeftPayload,
     RoomErrorPayload,
     RoomStatePayload,
+    RoomUpdatedPayload,
     RoundRevealedPayload,
     RoundStartedPayload,
     ShowdownStartedPayload,
@@ -34,6 +36,8 @@ export const useGameStore = defineStore('game', () => {
     const matchResult = ref<MatchEndedPayload | null>(null);
     const showdownTimeLimitMs = ref<number | null>(null);
     const showdownStartedAt = ref<number | null>(null);
+    /** Set once the server acks our own room:leave — the view watches this to navigate home. */
+    const leftRoom = ref(false);
 
     const footballPlayers = ref<Record<number, IFootballPlayer>>({});
 
@@ -124,6 +128,9 @@ export const useGameStore = defineStore('game', () => {
         socket.off('round:revealed');
         socket.off('match:ended');
         socket.off('room:error');
+        socket.off('room:updated');
+        socket.off('player:left');
+        socket.off('room:left');
 
         connectSocket(roomCode, userStore.guestId);
 
@@ -214,6 +221,24 @@ export const useGameStore = defineStore('game', () => {
         socket.on('room:error', (payload: RoomErrorPayload) => {
             error.value = payload.message;
         });
+
+        socket.on('room:updated', (payload: RoomUpdatedPayload) => {
+            room.value = payload;
+        });
+
+        socket.on('player:left', (payload: PlayerLeftPayload) => {
+            if (gameState.value) {
+                gameState.value.pot = payload.potTotal;
+                gameState.value.currentBet = payload.currentBet;
+                gameState.value.minRaise = payload.minRaise;
+                gameState.value.turnUserId = payload.nextTurnUserId;
+                gameState.value.players = payload.players;
+            }
+        });
+
+        socket.on('room:left', () => {
+            leftRoom.value = true;
+        });
     }
 
     function disconnect(): void {
@@ -226,6 +251,7 @@ export const useGameStore = defineStore('game', () => {
         guessPickerOpen.value = false;
         lastReveal.value = null;
         matchResult.value = null;
+        leftRoom.value = false;
     }
 
     function ready(): void {
@@ -234,6 +260,11 @@ export const useGameStore = defineStore('game', () => {
 
     function act(type: PlayerActionType, amount?: number): void {
         getSocket().emit('player:action', { type, amount });
+    }
+
+    /** Cancels the lobby (if you're the host) or forfeits/folds out of a live game — server decides which by room status. */
+    function leaveRoom(): void {
+        getSocket().emit('room:leave');
     }
 
     /** Submits or changes your secret guess — never locked in, callable throughout the round. */
@@ -263,6 +294,7 @@ export const useGameStore = defineStore('game', () => {
         connected,
         loading,
         error,
+        leftRoom,
         me,
         isMyTurn,
         isHost,
@@ -280,6 +312,7 @@ export const useGameStore = defineStore('game', () => {
         ready,
         act,
         guess,
+        leaveRoom,
         openGuessPicker,
         closeGuessPicker,
     };

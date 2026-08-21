@@ -142,6 +142,14 @@ class FakePrismaClient {
             this.roomPlayers.find(
                 (p) => p.roomId === where.roomId_userId.roomId && p.userId === where.roomId_userId.userId,
             ) ?? null,
+        delete: async ({ where }: { where: { roomId_userId: { roomId: number; userId: number } } }) => {
+            const idx = this.roomPlayers.findIndex(
+                (p) => p.roomId === where.roomId_userId.roomId && p.userId === where.roomId_userId.userId,
+            );
+            if (idx === -1) throw new Error('FakePrismaClient: no such room player');
+            const [removed] = this.roomPlayers.splice(idx, 1);
+            return removed;
+        },
     };
 }
 

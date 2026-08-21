@@ -4,6 +4,8 @@ import RoomService from '../services/room.service';
 import UserRepository from '../repositories/user.repository';
 import { GameEvent, PlayerActionType } from '../types/game.types';
 
+const DISCONNECT_GRACE_MS = Number(process.env.DISCONNECT_GRACE_MS) || 30000;
+
 interface RoomJoinPayload {
     roomCode: string;
     guestId: string;
@@ -43,6 +45,36 @@ export class SocketRegistry {
     }
 }
 
+/**
+ * Gives a disconnected socket ~30s to reconnect (refresh, network blip) before the room treats it
+ * as a real departure — cancel(...) is called from handleJoin on any (re-)auth, same style as
+ * RoomManager's showdownTimers map.
+ */
+class DisconnectGraceManager {
+    private timers = new Map<string, ReturnType<typeof setTimeout>>();
+
+    schedule(roomCode: string, userId: number, onExpire: () => void): void {
+        this.cancel(roomCode, userId);
+        const key = `${roomCode}:${userId}`;
+        this.timers.set(
+            key,
+            setTimeout(() => {
+                this.timers.delete(key);
+                onExpire();
+            }, DISCONNECT_GRACE_MS),
+        );
+    }
+
+    cancel(roomCode: string, userId: number): void {
+        const key = `${roomCode}:${userId}`;
+        const timer = this.timers.get(key);
+        if (timer) {
+            clearTimeout(timer);
+            this.timers.delete(key);
+        }
+    }
+}
+
 /** Turns GameEngine/RoomManager's addressed-but-transport-agnostic GameEvent[] into actual socket emits. */
 export function createEmitEvents(io: Server, registry: SocketRegistry): EmitEvents {
     return (roomCode: string, events: GameEvent[]) => {
@@ -58,6 +90,8 @@ export function createEmitEvents(io: Server, registry: SocketRegistry): EmitEven
 }
 
 export default class GameGateway {
+    private disconnectGrace = new DisconnectGraceManager();
+
     constructor(
         private io: Server,
         private roomManager: RoomManager,
@@ -81,6 +115,9 @@ export default class GameGateway {
         socket.on('player:guess', (payload: PlayerGuessPayload) => {
             this.handleGuess(socket, payload).catch((err) => this.emitError(socket, err));
         });
+        socket.on('room:leave', () => {
+            this.handleLeave(socket).catch((err) => this.emitError(socket, err));
+        });
         socket.on('disconnect', () => this.handleDisconnect(socket));
     }
 
@@ -90,6 +127,9 @@ export default class GameGateway {
         }
         const roomCode = payload.roomCode.toUpperCase();
         const room = await this.roomService.getRoom(roomCode);
+        if (room.status === 'CANCELLED') {
+            throw new Error('This room has been cancelled');
+        }
         const user = await this.userRepository.findByGuestId(payload.guestId);
         const roomPlayer = user && room.players.find((p) => p.userId === user.id);
         if (!user || !roomPlayer) {
@@ -100,6 +140,8 @@ export default class GameGateway {
         socket.data.auth = auth;
         socket.join(roomCode);
         this.registry.track(roomCode, user.id, socket.id);
+        // Reconnecting within the grace window (see handleDisconnect) — this join is proof of life.
+        this.disconnectGrace.cancel(roomCode, user.id);
 
         const engine = this.roomManager.register(
             roomCode,
@@ -133,9 +175,48 @@ export default class GameGateway {
         await this.roomManager.submitGuess(auth.roomCode, auth.roomId, auth.userId, payload.footballPlayerId);
     }
 
+    private async handleLeave(socket: Socket): Promise<void> {
+        const auth = this.requireAuth(socket);
+        await this.performLeave(auth.roomCode, auth.roomId, auth.userId, socket);
+    }
+
     private handleDisconnect(socket: Socket): void {
         const auth = socket.data.auth as SocketAuth | undefined;
-        if (auth) this.registry.untrack(auth.roomCode, auth.userId);
+        if (!auth) return;
+        this.registry.untrack(auth.roomCode, auth.userId);
+        // Not a real departure yet — give reconnects (refresh, network blip) a grace window before
+        // treating this like an explicit room:leave. Cancelled by handleJoin if they come back.
+        this.disconnectGrace.schedule(auth.roomCode, auth.userId, () => {
+            this.performLeave(auth.roomCode, auth.roomId, auth.userId).catch((err) => {
+                console.error(`[game.gateway]: disconnect-grace leave failed for room ${auth.roomCode}`, err);
+            });
+        });
+    }
+
+    /**
+     * The one funnel every departure goes through — an explicit room:leave, or a disconnect grace
+     * period expiring (`socket` is omitted in that case, since there's no live client to notify).
+     */
+    private async performLeave(roomCode: string, roomId: number, userId: number, socket?: Socket): Promise<void> {
+        this.disconnectGrace.cancel(roomCode, userId);
+        this.registry.untrack(roomCode, userId);
+        const room = await this.roomService.getRoom(roomCode);
+
+        if (room.status === 'WAITING') {
+            const { room: updated, cancelled } = await this.roomService.leaveWaitingRoom(roomCode, userId);
+            const engine = this.roomManager.get(roomCode);
+            engine?.syncSeatedPlayers(updated.players.map((p) => ({ userId: p.userId, seat: p.seat })));
+            if (cancelled) this.roomManager.remove(roomCode);
+            this.io.to(roomCode).emit('room:updated', updated);
+        } else if (room.status === 'IN_PROGRESS') {
+            await this.roomManager.leaveGame(roomCode, roomId, userId);
+        }
+
+        if (socket) {
+            socket.emit('room:left', {});
+            socket.leave(roomCode);
+            socket.data.auth = undefined;
+        }
     }
 
     private requireAuth(socket: Socket): SocketAuth {

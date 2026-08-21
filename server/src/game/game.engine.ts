@@ -114,12 +114,17 @@ export default class GameEngine {
      * Reconciles the roster against the room's current DB player list. Needed because the engine
      * is created the moment the *first* socket joins a room (RoomManager#register) — typically the
      * host, connecting from the lobby before anyone else has joined — and every later join must
-     * still be reflected here, or a round can start seated with only that first player. A no-op
-     * once a round is underway: RoomService already blocks new REST joins by then (PLAN.md §9.7),
-     * so there is nothing new to reconcile and mid-round seating must never change.
+     * still be reflected here, or a round can start seated with only that first player. Also prunes
+     * players no longer in the passed roster (left/cancelled out of the lobby before a round ever
+     * started), so a departed player can't linger as a phantom seat once startRound runs. A no-op
+     * once a round is underway: RoomService already blocks new REST joins/leaves by then (PLAN.md
+     * §9.7), so there is nothing new to reconcile and mid-round seating must never change.
      */
     syncSeatedPlayers(seatedPlayers: SeatedPlayer[], startingChips = STARTING_CHIPS_DEFAULT): void {
         if (this.state.stage !== 'WAITING') return;
+        const incoming = new Set(seatedPlayers.map((sp) => sp.userId));
+        this.state.players = this.state.players.filter((p) => incoming.has(p.userId));
+
         const known = new Set(this.state.players.map((p) => p.userId));
         for (const sp of seatedPlayers) {
             if (known.has(sp.userId)) continue;
@@ -136,6 +141,52 @@ export default class GameEngine {
             });
         }
         this.state.players.sort((a, b) => a.seat - b.seat);
+    }
+
+    /**
+     * Removes a player from a live game — an explicit leave, or a disconnect grace period expiring
+     * (RoomManager#leaveGame). Reuses the same `isActive` flag startRound/finishRound already treat
+     * as "busted/left" (PLAN.md), so dealer rotation, betting eligibility and round-history
+     * participant lists all already exclude this player without further changes here. If they still
+     * owed an action this street, folds them out of it and — reusing the exact same "close the
+     * street" / "resolve the round" paths applyAction takes for a real fold — advances the game
+     * exactly as if they'd folded normally.
+     */
+    leaveGame(userId: number): GameEvent[] {
+        const player = this.state.players.find((p) => p.userId === userId);
+        if (!player || !player.isActive) return [];
+        player.isActive = false;
+
+        const wasQueued = this.toActUserIds.includes(userId);
+        if (BETTING_STAGES.includes(this.state.stage) && !player.isFolded && !player.isAllIn) {
+            player.isFolded = true;
+            this.toActUserIds = this.toActUserIds.filter((id) => id !== userId);
+            if (this.state.turnUserId === userId) this.state.turnUserId = this.toActUserIds[0] ?? null;
+        }
+
+        const leftEvent: GameEvent = {
+            scope: 'room',
+            type: 'player:left',
+            payload: {
+                userId,
+                players: this.getSnapshot().players,
+                potTotal: this.state.pot,
+                currentBet: this.state.currentBet,
+                minRaise: this.state.minRaise,
+                nextTurnUserId: this.state.turnUserId,
+            },
+        };
+
+        if (!BETTING_STAGES.includes(this.state.stage)) return [leftEvent];
+
+        const nonFolded = this.state.players.filter((p) => p.isActive && !p.isFolded);
+        if (nonFolded.length <= 1) {
+            return [leftEvent, ...this.resolveRound(nonFolded.map((p) => p.userId))];
+        }
+        if (wasQueued && this.toActUserIds.length === 0) {
+            return [leftEvent, ...this.closeBettingRoundAndAdvance()];
+        }
+        return [leftEvent];
     }
 
     startRound(scenario: RoundScenario): GameEvent[] {

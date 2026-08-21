@@ -51,4 +51,23 @@ export default class RoomService {
         if (!room) throw new NotFoundError(`No room with code ${code}`);
         return room;
     }
+
+    /**
+     * A player leaving a still-open lobby. The host leaving cancels the room for everyone rather
+     * than transferring the role — a WAITING room is never left ownerless. Otherwise just drops
+     * that one player's seat. No-op if the room already moved past WAITING (nothing to reconcile —
+     * see GameEngine#leaveGame for the in-progress path instead).
+     */
+    async leaveWaitingRoom(code: string, userId: number): Promise<{ room: IRoomWithPlayers; cancelled: boolean }> {
+        const room = await this.getRoom(code);
+        if (room.status !== 'WAITING') return { room, cancelled: false };
+
+        if (userId === room.hostUserId) {
+            await this.roomRepository.updateStatus(room.id, 'CANCELLED');
+        } else {
+            await this.roomRepository.removePlayer(room.id, userId);
+        }
+        const updated = await this.getRoom(code);
+        return { room: updated, cancelled: userId === room.hostUserId };
+    }
 }

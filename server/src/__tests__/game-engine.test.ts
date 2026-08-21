@@ -179,6 +179,99 @@ describe('GameEngine', () => {
         expect(engine.getSnapshot().players.map((p) => p.userId)).toEqual([1, 2, 3]);
     });
 
+    it('syncSeatedPlayers prunes a player who left the lobby before the round started', () => {
+        const engine = new GameEngine('ABC123', PLAYERS, 5, 1000);
+        engine.syncSeatedPlayers([
+            { userId: 1, seat: 0 },
+            { userId: 2, seat: 1 },
+        ]);
+        expect(engine.getSnapshot().players.map((p) => p.userId)).toEqual([1, 2]);
+    });
+
+    describe('leaveGame', () => {
+        it('auto-folds and advances the turn when it was the leaver\'s turn to act', () => {
+            const engine = new GameEngine('ABC123', PLAYERS, 5, 1000);
+            engine.startRound(makeScenario());
+            const leaver = engine.getSnapshot().turnUserId!;
+
+            const events = engine.leaveGame(leaver);
+
+            const snapshot = engine.getSnapshot();
+            expect(snapshot.stage).toBe('PREFLOP_BETTING');
+            expect(snapshot.players.find((p) => p.userId === leaver)).toMatchObject({
+                isActive: false,
+                isFolded: true,
+            });
+            expect(snapshot.turnUserId).not.toBe(leaver);
+            expect(payloadOf(events, 'player:left')).toMatchObject({ userId: leaver });
+        });
+
+        it('removes a queued (not-yet-acted) player without disrupting whoever is currently on the clock', () => {
+            const engine = new GameEngine('ABC123', PLAYERS, 5, 1000);
+            engine.startRound(makeScenario());
+            const currentTurn = engine.getSnapshot().turnUserId!;
+            const queuedLeaver = PLAYERS.map((p) => p.userId).find((id) => id !== currentTurn)!;
+
+            engine.leaveGame(queuedLeaver);
+
+            const snapshot = engine.getSnapshot();
+            expect(snapshot.turnUserId).toBe(currentTurn);
+            expect(snapshot.stage).toBe('PREFLOP_BETTING');
+            expect(snapshot.players.find((p) => p.userId === queuedLeaver)).toMatchObject({
+                isActive: false,
+                isFolded: true,
+            });
+        });
+
+        it('resolves the round uncontested when it drops non-folded players to one', () => {
+            const engine = new GameEngine('ABC123', PLAYERS, 5, 1000);
+            engine.startRound(makeScenario());
+            const firstToAct = engine.getSnapshot().turnUserId!;
+            engine.applyAction(firstToAct, 'fold');
+
+            const remaining = engine
+                .getSnapshot()
+                .players.filter((p) => !p.isFolded)
+                .map((p) => p.userId);
+            const [staying, leaving] = remaining;
+
+            const events = engine.leaveGame(leaving);
+
+            const revealPayload = payloadOf(events, 'round:revealed');
+            expect(revealPayload).toMatchObject({ winners: [staying] });
+            expect(engine.getSnapshot().stage).toBe('REVEAL');
+        });
+
+        it('outside a betting stage just marks the player inactive, without touching fold state', () => {
+            const engine = new GameEngine('ABC123', PLAYERS, 5, 1000);
+            engine.startRound(makeScenario());
+            actUntilStageChanges(engine, 'check');
+            actUntilStageChanges(engine, 'check');
+            actUntilStageChanges(engine, 'check');
+            actUntilStageChanges(engine, 'check');
+            expect(engine.getSnapshot().stage).toBe('SHOWDOWN');
+
+            const events = engine.leaveGame(3);
+
+            const player = engine.getSnapshot().players.find((p) => p.userId === 3)!;
+            expect(player.isActive).toBe(false);
+            expect(player.isFolded).toBe(false);
+            expect(engine.getSnapshot().stage).toBe('SHOWDOWN');
+            expect(payloadOf(events, 'round:revealed')).toBeUndefined();
+        });
+
+        it('is a no-op for an unknown or already-departed player', () => {
+            const engine = new GameEngine('ABC123', PLAYERS, 5, 1000);
+            engine.startRound(makeScenario());
+
+            expect(engine.leaveGame(999)).toEqual([]);
+
+            const leaver = engine.getSnapshot().turnUserId!;
+            engine.leaveGame(leaver);
+            expect(engine.leaveGame(leaver)).toEqual([]);
+        });
+    });
+
     it('lets a non-folded player guess (and re-guess) as soon as the round starts, well before SHOWDOWN', () => {
         const engine = new GameEngine('ABC123', PLAYERS, 5, 1000);
         engine.startRound(makeScenario());

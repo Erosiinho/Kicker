@@ -8,12 +8,20 @@
       <span v-if="store.room && store.gameState" class="pill pill-neutral">
         Round {{ store.gameState.round || store.room.currentRound }} / {{ store.room.maxRounds }}
       </span>
+      <button v-if="store.room?.status === 'IN_PROGRESS'" class="btn btn-ghost btn-sm" @click="leaveInGame">
+        Quitter
+      </button>
     </header>
 
     <p v-if="store.error && !needsToJoin" class="pill pill-red mx-auto w-fit">{{ store.error }}</p>
 
     <div v-if="notFound" class="empty-state">
       <p>No room found for code <span class="stat-mono">{{ code }}</span>.</p>
+      <router-link to="/" class="btn btn-ghost btn-sm">Back home</router-link>
+    </div>
+
+    <div v-else-if="store.room?.status === 'CANCELLED'" class="empty-state">
+      <p>This room has been cancelled.</p>
       <router-link to="/" class="btn btn-ghost btn-sm">Back home</router-link>
     </div>
 
@@ -54,6 +62,9 @@
           <p v-else class="text-center text-sm" style="color: var(--chalk-faint)">
             Waiting for the host to kick off…
           </p>
+          <button class="btn btn-ghost btn-sm" :class="{ 'btn-danger': store.isHost }" @click="store.leaveRoom()">
+            {{ store.isHost ? 'Cancel lobby' : 'Leave lobby' }}
+          </button>
         </div>
       </div>
 
@@ -64,6 +75,7 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { useGameStore } from '@/stores/game';
 import { useUserStore } from '@/stores/user';
 import RoomCodeDisplay from '@/components/RoomCodeDisplay.vue';
@@ -72,6 +84,7 @@ import PokerTable from '@/components/PokerTable.vue';
 const props = defineProps<{ code: string }>();
 const code = props.code.toUpperCase();
 
+const router = useRouter();
 const store = useGameStore();
 const userStore = useUserStore();
 
@@ -114,6 +127,19 @@ watch(
         if (msg && /not a player/i.test(msg)) needsToJoin.value = true;
     },
 );
+
+watch(
+    () => store.leftRoom,
+    (left) => {
+        if (left) router.push('/');
+    },
+);
+
+function leaveInGame() {
+    if (window.confirm('Quitter maintenant vous fera coucher et sortira de la partie. Continuer ?')) {
+        store.leaveRoom();
+    }
+}
 
 async function joinNow() {
     joining.value = true;
