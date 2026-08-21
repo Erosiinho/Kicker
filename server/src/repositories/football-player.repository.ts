@@ -27,10 +27,15 @@ export default class FootballPlayerRepository {
         return rows.map((r) => r.id);
     }
 
-    /** Every player who shares an org with `playerId` during an overlapping stint. */
-    async getTeammateIds(playerId: number): Promise<number[]> {
-        const rows = await this.client.$queryRaw<{ id: number }[]>`
-            SELECT DISTINCT s2."footballPlayerId" AS id
+    /**
+     * Every player who shares an org with `playerId` during an overlapping stint, each tagged
+     * with `overlapStartYear` — the earliest year their stints actually overlapped (across every
+     * shared org, if there's more than one) — so callers can order teammates chronologically by
+     * "when did they first play together" (link-engine.service.ts's community card ordering).
+     */
+    async getTeammateIds(playerId: number): Promise<{ id: number; overlapStartYear: number }[]> {
+        const rows = await this.client.$queryRaw<{ id: number; overlapStartYear: number }[]>`
+            SELECT s2."footballPlayerId" AS id, MIN(GREATEST(s1."startYear", s2."startYear")) AS "overlapStartYear"
             FROM stints s1
             JOIN stints s2
               ON s1."organizationId" = s2."organizationId"
@@ -38,8 +43,9 @@ export default class FootballPlayerRepository {
             WHERE s1."footballPlayerId" = ${playerId}
               AND s1."startYear" <= COALESCE(s2."endYear", 9999)
               AND s2."startYear" <= COALESCE(s1."endYear", 9999)
+            GROUP BY s2."footballPlayerId"
         `;
-        return rows.map((r) => r.id);
+        return rows;
     }
 
     /**

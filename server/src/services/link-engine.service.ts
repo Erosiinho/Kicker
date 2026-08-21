@@ -69,7 +69,11 @@ export default class LinkEngineService {
                 sampleAttempt++
             ) {
                 totalAttempts++;
-                const communityPlayerIds = sampleDistinct(teammateIds, COMMUNITY_CARD_COUNT) as [
+                const sampledTeammates = sampleDistinct(teammateIds, COMMUNITY_CARD_COUNT);
+                // Displayed/revealed in the order the mystery player actually played with them —
+                // earliest overlap first — rather than the sampling order (PLAN.md's "reveal order").
+                sampledTeammates.sort((a, b) => a.overlapStartYear - b.overlapStartYear);
+                const communityPlayerIds = sampledTeammates.map((t) => t.id) as [
                     number,
                     number,
                     number,
@@ -120,9 +124,8 @@ export default class LinkEngineService {
         let intersection: Set<number> | null = null;
 
         for (const communityPlayerId of communityPlayerIds) {
-            const teammates = new Set(
-                await this.footballPlayerRepository.getTeammateIds(communityPlayerId),
-            );
+            const communityTeammates = await this.footballPlayerRepository.getTeammateIds(communityPlayerId);
+            const teammates = new Set(communityTeammates.map((t) => t.id));
             if (intersection === null) {
                 intersection = teammates;
             } else {

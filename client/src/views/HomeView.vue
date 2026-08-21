@@ -4,8 +4,8 @@
       <img :src="logo" alt="Kicker crest" class="brand-crest-img" width="72" height="72" />
       <h1 class="brand-title">KICKER</h1>
       <p class="brand-subtitle max-w-sm">
-        Five community cards. One mystery footballer who played with all of them.
-        Bet your chips on how sure you are — then guess.
+        Five community cards. One mystery footballer who played with all of them,
+        revealed in the order they crossed paths. Bet your chips on how sure you are — then guess.
       </p>
     </div>
 
