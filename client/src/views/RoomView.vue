@@ -3,7 +3,7 @@
     <header class="flex items-center justify-between">
       <router-link to="/" class="flex items-center gap-2">
         <span class="brand-crest text-sm">⚽</span>
-        <span class="brand-title text-lg sm:text-xl">FOOT<em>·</em>POKER</span>
+        <span class="brand-title text-lg sm:text-xl">KICKER</span>
       </router-link>
       <span v-if="store.room && store.gameState" class="pill pill-neutral">
         Round {{ store.gameState.round || store.room.currentRound }} / {{ store.room.maxRounds }}
