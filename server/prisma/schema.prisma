@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  guestId        String   @unique              // client-generated UUID, persisted in localStorage — no accounts/passwords for MVP
+  displayName    String
+  roundsPlayed   Int      @default(0)
+  roundsWon      Int      @default(0)
+  correctGuesses Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  hostedRooms    Room[]       @relation("RoomHost")
+  roomPlayers    RoomPlayer[]
+
+  @@map("users")
+}
+
+model Room {
+  id           Int        @id @default(autoincrement())
+  code         String     @unique @db.VarChar(6)   // human-typeable invite code, e.g. "7K2QXM"
+  status       RoomStatus @default(WAITING)
+  hostUserId   Int
+  host         User       @relation("RoomHost", fields: [hostUserId], references: [id])
+  maxRounds    Int        @default(10)
+  currentRound Int        @default(0)
+  createdAt    DateTime   @default(now())
+
+  players      RoomPlayer[]
+  rounds       RoundHistory[]
+
+  @@map("rooms")
+}
+
+enum RoomStatus {
+  WAITING
+  IN_PROGRESS
+  FINISHED
+}
+
+model RoomPlayer {
+  id       Int     @id @default(autoincrement())
+  roomId   Int
+  room     Room    @relation(fields: [roomId], references: [id])
+  userId   Int
+  user     User    @relation(fields: [userId], references: [id])
+  seat     Int                          // turn-order position, assigned on join
+  chips    Int     @default(1000)
+  isActive Boolean @default(true)       // false once eliminated (busted) or disconnected+removed
+
+  @@unique([roomId, userId])
+  @@unique([roomId, seat])
+  @@map("room_players")
+}
+
+model FootballPlayer {
+  id               Int     @id @default(autoincrement())
+  wikidataQid      String  @unique          // e.g. "Q615" — canonical external id, makes re-seeding idempotent
+  name             String
+  photoUrl         String?
+  distinctOrgCount Int     @default(0)      // denormalized: COUNT(DISTINCT organizationId) across this player's stints, recomputed by the ingestion script after loading
+
+  stints           Stint[]
+
+  @@index([distinctOrgCount])
+  @@map("football_players")
+}
+
+enum OrganizationType {
+  CLUB
+  NATIONAL_TEAM
+}
+
+model Organization {
+  id          Int              @id @default(autoincrement())
+  wikidataQid String           @unique      // e.g. "Q8682" — canonical external id, avoids name-variant duplicates ("Real Madrid" vs "Real Madrid CF")
+  name        String
+  type        OrganizationType
+
+  stints      Stint[]
+
+  @@map("organizations")
+}
+
+model Stint {
+  id               Int            @id @default(autoincrement())
+  footballPlayerId Int
+  footballPlayer   FootballPlayer @relation(fields: [footballPlayerId], references: [id])
+  organizationId   Int
+  organization     Organization   @relation(fields: [organizationId], references: [id])
+  startYear        Int
+  endYear          Int?                // null = ongoing/current at dataset curation time
+
+  @@index([organizationId])
+  @@index([footballPlayerId])
+  @@map("stints")
+}
+
+model RoundHistory {
+  id                 Int      @id @default(autoincrement())
+  roomId             Int
+  room               Room     @relation(fields: [roomId], references: [id])
+  roundNumber        Int
+  mysteryPlayerId    Int
+  communityPlayerIds Json                // number[] — the 5 revealed FootballPlayer ids, in reveal order
+  winnerUserIds      Json                // number[] — Users who guessed correctly; [] if none did
+  potAwarded         Int
+  playedAt           DateTime @default(now())
+
+  @@map("round_history")
+}

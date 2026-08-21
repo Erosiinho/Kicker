@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <radialGradient id="bg" cx="35%" cy="28%" r="78%">
+      <stop offset="0%" stop-color="#295a38"/>
+      <stop offset="55%" stop-color="#14301f"/>
+      <stop offset="100%" stop-color="#071410"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f6d488"/>
+      <stop offset="50%" stop-color="#e7b448"/>
+      <stop offset="100%" stop-color="#b9832a"/>
+    </linearGradient>
+    <radialGradient id="ballShade" cx="36%" cy="30%" r="72%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="65%" stop-color="#f3efe1"/>
+      <stop offset="100%" stop-color="#d8d2bd"/>
+    </radialGradient>
+  </defs>
+
+  <!-- crest base -->
+  <circle cx="128" cy="128" r="122" fill="url(#bg)"/>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="url(#ring)" stroke-width="8"/>
+
+  <!-- ball -->
+  <g>
+    <circle cx="128" cy="130" r="78" fill="url(#ballShade)"/>
+
+    <!-- classic pentagon seam lines (line art, no fill) for football read -->
+    <g fill="none" stroke="#1d4029" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" opacity="0.85">
+      <path d="M128 96 L94 72 L60 92 L66 130 L98 142"/>
+      <path d="M128 96 L162 72 L196 92 L190 130 L158 142"/>
+      <path d="M66 130 L60 92"/>
+      <path d="M190 130 L196 92"/>
+      <path d="M66 130 L58 172 L88 198"/>
+      <path d="M190 130 L198 172 L168 198"/>
+    </g>
+
+    <!-- center spade — the ball's core patch reads as the poker suit -->
+    <path
+      d="M128 100
+         C 108 118, 90 138, 90 160
+         C 90 178, 104 189, 119 184
+         C 115 197, 105 205, 92 210
+         L 164 210
+         C 151 205, 141 197, 137 184
+         C 152 189, 166 178, 166 160
+         C 166 138, 148 118, 128 100 Z"
+      fill="#14301f"/>
+  </g>
+</svg>

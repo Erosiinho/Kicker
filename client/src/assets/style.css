@@ -1,0 +1,359 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+
+@layer base {
+  :root {
+    --pitch: #0b1f17;
+    --pitch-deep: #071410;
+    --turf: #14301f;
+    --turf-light: #1d4029;
+    --turf-lighter: #295a38;
+
+    --chalk: #f3efe1;
+    --chalk-dim: #a9b8ac;
+    --chalk-faint: #6f8277;
+
+    --gold: #e7b448;
+    --gold-soft: rgba(231, 180, 72, 0.14);
+    --gold-ink: #241a05;
+
+    --red: #e14b3b;
+    --red-soft: rgba(225, 75, 59, 0.16);
+
+    --sky: #4fa3d8;
+    --sky-soft: rgba(79, 163, 216, 0.16);
+
+    --line: rgba(243, 239, 225, 0.1);
+    --line-strong: rgba(243, 239, 225, 0.18);
+
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 22px;
+    --radius-full: 999px;
+
+    --shadow-card: 0 10px 24px -8px rgba(0, 0, 0, 0.55);
+    --shadow-panel: 0 20px 48px -18px rgba(0, 0, 0, 0.65);
+
+    --font-display: 'Oswald', 'Arial Narrow', sans-serif;
+    --font-body: 'Inter', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--pitch);
+    background-image:
+      repeating-linear-gradient(
+        115deg,
+        rgba(255, 255, 255, 0.015) 0px,
+        rgba(255, 255, 255, 0.015) 2px,
+        transparent 2px,
+        transparent 64px
+      ),
+      radial-gradient(ellipse 60% 40% at 50% -10%, rgba(231, 180, 72, 0.08), transparent 60%);
+    color: var(--chalk);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background: var(--gold-soft);
+    color: var(--gold);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* --- layout shells --- */
+  .app-shell {
+    @apply mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12;
+  }
+
+  .app-shell-narrow {
+    @apply mx-auto flex min-h-screen w-full max-w-md flex-col justify-center gap-8 px-5 py-12;
+  }
+
+  .brand-lockup {
+    @apply flex items-center justify-center gap-3;
+  }
+
+  .brand-crest {
+    @apply flex h-11 w-11 items-center justify-center rounded-full text-lg font-bold;
+    background: linear-gradient(155deg, var(--turf-lighter), var(--turf));
+    border: 1px solid var(--line-strong);
+    color: var(--gold);
+  }
+
+  .brand-title {
+    font-family: var(--font-display);
+    @apply text-4xl font-semibold uppercase tracking-wide sm:text-5xl;
+    color: var(--chalk);
+  }
+
+  .brand-title em {
+    font-style: normal;
+    color: var(--gold);
+  }
+
+  .brand-subtitle {
+    @apply text-sm leading-relaxed;
+    color: var(--chalk-dim);
+  }
+
+  /* --- panels & fields --- */
+  .panel-turf {
+    background: linear-gradient(180deg, var(--turf-light), var(--turf));
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-panel);
+    @apply flex flex-col gap-5 p-6;
+  }
+
+  .field-label {
+    font-family: var(--font-display);
+    @apply text-xs font-medium uppercase tracking-[0.14em];
+    color: var(--chalk-faint);
+  }
+
+  .field-input {
+    @apply w-full rounded-[var(--radius-md)] px-4 py-3 text-base outline-none transition-colors;
+    background-color: var(--pitch-deep);
+    border: 1px solid var(--line-strong);
+    color: var(--chalk);
+    font-family: var(--font-body);
+  }
+
+  .field-input::placeholder {
+    color: var(--chalk-faint);
+  }
+
+  .field-input:focus-visible {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px var(--gold-soft);
+  }
+
+  .field-input--code {
+    font-family: var(--font-display);
+    @apply text-center text-2xl font-semibold uppercase tracking-[0.3em];
+  }
+
+  /* --- buttons --- */
+  .btn {
+    font-family: var(--font-display);
+    @apply inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] px-5 py-3 text-sm font-semibold uppercase tracking-wide transition-all duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100;
+  }
+
+  .btn-kickoff {
+    background: linear-gradient(180deg, #f2c463, var(--gold));
+    color: var(--gold-ink);
+    box-shadow: 0 10px 22px -8px rgba(231, 180, 72, 0.55);
+  }
+
+  .btn-kickoff:hover:not(:disabled) {
+    filter: brightness(1.05);
+  }
+
+  .btn-ghost {
+    background-color: transparent;
+    border: 1px solid var(--line-strong);
+    color: var(--chalk);
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .btn-danger {
+    background: linear-gradient(180deg, #ea6a5c, var(--red));
+    color: #2a0c07;
+  }
+
+  .btn-sky {
+    background: linear-gradient(180deg, #6cb8e5, var(--sky));
+    color: #06202f;
+  }
+
+  .btn-sm {
+    @apply px-3.5 py-2 text-xs;
+  }
+
+  /* --- badges / pills --- */
+  .pill {
+    @apply inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold;
+  }
+
+  .pill-gold {
+    background-color: var(--gold-soft);
+    color: var(--gold);
+  }
+
+  .pill-red {
+    background-color: var(--red-soft);
+    color: #ff8a7c;
+  }
+
+  .pill-sky {
+    background-color: var(--sky-soft);
+    color: var(--sky);
+  }
+
+  .pill-neutral {
+    background-color: rgba(243, 239, 225, 0.06);
+    color: var(--chalk-dim);
+    border: 1px solid var(--line);
+  }
+
+  .squad-number {
+    font-family: var(--font-mono);
+    @apply flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[0.65rem] font-semibold;
+    background-color: rgba(243, 239, 225, 0.08);
+    color: var(--chalk-dim);
+  }
+
+  /* --- scoreboard-style numerics --- */
+  .stat-mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .scoreboard {
+    @apply flex flex-col items-center gap-1 rounded-[var(--radius-md)] px-5 py-3;
+    background-color: var(--pitch-deep);
+    border: 1px solid var(--line-strong);
+  }
+
+  .scoreboard-value {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    @apply text-2xl font-semibold tracking-wide;
+    color: var(--gold);
+  }
+
+  .scoreboard-label {
+    font-family: var(--font-display);
+    @apply text-[0.65rem] uppercase tracking-[0.18em];
+    color: var(--chalk-faint);
+  }
+
+  /* --- dossier cards (signature element) --- */
+  .card-dossier {
+    @apply relative flex flex-col overflow-hidden rounded-[var(--radius-md)];
+    background: linear-gradient(165deg, #1c3b27, var(--pitch-deep));
+    border: 1px solid var(--line-strong);
+    box-shadow: var(--shadow-card);
+    aspect-ratio: 3 / 4;
+  }
+
+  .card-dossier-photo {
+    @apply relative flex-1 overflow-hidden;
+    background-color: var(--turf);
+  }
+
+  .card-dossier-photo img {
+    @apply h-full w-full object-cover;
+    /* Most source photos are head-and-shoulders with headroom above and torso below —
+       centering the crop cuts foreheads off. Biasing toward the top keeps faces in frame. */
+    object-position: 50% 20%;
+  }
+
+  .card-dossier-name {
+    font-family: var(--font-display);
+    @apply px-2 py-1.5 text-center text-[0.7rem] font-medium uppercase leading-tight tracking-wide sm:text-xs;
+    background-color: rgba(7, 20, 16, 0.85);
+    color: var(--chalk);
+  }
+
+  .card-dossier--hidden {
+    @apply items-center justify-center gap-2;
+    background: repeating-linear-gradient(135deg, var(--turf) 0px, var(--turf) 10px, var(--turf-light) 10px, var(--turf-light) 20px);
+  }
+
+  .card-dossier--hidden .stamp {
+    font-family: var(--font-display);
+    @apply rotate-[-14deg] rounded-sm border-2 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.2em] sm:text-xs;
+    border-color: var(--red);
+    color: var(--red);
+    opacity: 0.85;
+  }
+
+  .card-dossier--empty {
+    background: transparent;
+    border: 1.5px dashed var(--line-strong);
+    box-shadow: none;
+  }
+
+  .card-dossier--winner {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px var(--gold), var(--shadow-card);
+  }
+
+  /* --- pitch table --- */
+  .pitch-oval {
+    background: radial-gradient(ellipse at 50% 35%, var(--turf-light), var(--turf) 70%);
+    border: 2px solid var(--line-strong);
+    border-radius: 50% / 28%;
+    box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.4), var(--shadow-panel);
+  }
+
+  .stage-rail {
+    @apply flex items-center justify-center gap-1 rounded-full px-2 py-2 text-[0.65rem] sm:gap-2 sm:text-xs;
+    background-color: var(--pitch-deep);
+    border: 1px solid var(--line);
+  }
+
+  .stage-step {
+    font-family: var(--font-display);
+    @apply rounded-full px-2.5 py-1 font-medium uppercase tracking-wide transition-colors sm:px-3;
+    color: var(--chalk-faint);
+  }
+
+  .stage-step--active {
+    background-color: var(--gold-soft);
+    color: var(--gold);
+  }
+
+  .stage-step--done {
+    color: var(--chalk-dim);
+  }
+
+  .turn-ring {
+    box-shadow: 0 0 0 2px var(--gold);
+    animation: turn-pulse 1.8s ease-in-out infinite;
+  }
+
+  @keyframes turn-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 2px var(--gold), 0 0 0 2px var(--gold);
+    }
+    50% {
+      box-shadow: 0 0 0 2px var(--gold), 0 0 14px 3px var(--gold-soft);
+    }
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--line);
+  }
+
+  .empty-state {
+    @apply flex flex-col items-center justify-center gap-2 rounded-[var(--radius-md)] py-10 text-center;
+    background-color: rgba(0, 0, 0, 0.15);
+    border: 1px dashed var(--line-strong);
+    color: var(--chalk-dim);
+  }
+}
