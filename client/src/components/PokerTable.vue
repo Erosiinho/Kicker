@@ -18,6 +18,8 @@
           </span>
         </div>
 
+        <ShowdownTimer />
+
         <div class="pitch-oval flex flex-col items-center gap-6 px-4 py-10 sm:py-14">
           <div v-if="opponents.length > 0" class="flex flex-wrap justify-center gap-3 sm:gap-5">
             <PlayerSeat
@@ -71,6 +73,7 @@ import GuessModal from './GuessModal.vue';
 import Scoreboard from './Scoreboard.vue';
 import BettingControls from './BettingControls.vue';
 import RevealBanner from './RevealBanner.vue';
+import ShowdownTimer from './ShowdownTimer.vue';
 import { useGameStore } from '@/stores/game';
 import type { PlayerState, Stage } from '@/api/types';
 

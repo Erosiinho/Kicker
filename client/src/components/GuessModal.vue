@@ -7,9 +7,7 @@
           <h2 class="brand-title text-2xl leading-none">Who's the mystery player?</h2>
         </div>
         <div class="flex items-start gap-2">
-          <span v-if="secondsLeft !== null" class="scoreboard shrink-0 px-3 py-1.5">
-            <span class="scoreboard-value text-lg">{{ secondsLeft }}s</span>
-          </span>
+          <ShowdownTimer compact />
           <button class="btn btn-ghost btn-sm" aria-label="Close" @click="close">✕</button>
         </div>
       </div>
@@ -46,9 +44,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { api } from '@/api/api';
 import { useGameStore } from '@/stores/game';
+import ShowdownTimer from './ShowdownTimer.vue';
 import type { IFootballPlayer } from '@/api/types';
 
 const store = useGameStore();
@@ -97,17 +96,4 @@ watch(
         if (stage === 'SHOWDOWN' && store.myGuess === null && store.canGuess) store.openGuessPicker();
     },
 );
-
-const now = ref(Date.now());
-let tick: ReturnType<typeof setInterval> | undefined;
-onMounted(() => {
-    tick = setInterval(() => (now.value = Date.now()), 500);
-});
-onUnmounted(() => clearInterval(tick));
-
-const secondsLeft = computed(() => {
-    if (store.gameState?.stage !== 'SHOWDOWN' || !store.showdownStartedAt || !store.showdownTimeLimitMs) return null;
-    const remaining = store.showdownStartedAt + store.showdownTimeLimitMs - now.value;
-    return Math.max(0, Math.ceil(remaining / 1000));
-});
 </script>
