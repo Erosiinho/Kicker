@@ -97,6 +97,11 @@
     color: var(--gold);
   }
 
+  .brand-crest-img {
+    @apply h-[72px] w-[72px] self-center;
+    filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.45));
+  }
+
   .brand-title {
     font-family: var(--font-display);
     @apply text-4xl font-semibold uppercase tracking-wide sm:text-5xl;
