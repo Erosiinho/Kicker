@@ -49,7 +49,10 @@ export function createApp(db: IDb): App {
     app.use(cors());
     app.use(express.json());
 
-    const roomController = new RoomController(roomService);
+    const server = http.createServer(app);
+    const io = new SocketIOServer(server, { cors: { origin: '*' } });
+
+    const roomController = new RoomController(roomService, io);
     const userController = new UserController(userService);
     const footballPlayerController = new FootballPlayerController(footballPlayerService);
     app.use('/api/rooms', roomRoutes(roomController));
@@ -58,9 +61,6 @@ export function createApp(db: IDb): App {
 
     // Registered AFTER routes — an error middleware mounted earlier never sees their errors (Express requirement).
     app.use(errorMiddleware);
-
-    const server = http.createServer(app);
-    const io = new SocketIOServer(server, { cors: { origin: '*' } });
 
     const registry = new SocketRegistry();
     const emitEvents = createEmitEvents(io, registry);

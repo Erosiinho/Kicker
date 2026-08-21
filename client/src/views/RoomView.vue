@@ -94,21 +94,6 @@ const joinName = ref(userStore.displayName);
 const joining = ref(false);
 const joinError = ref<string | null>(null);
 
-let lobbyPoll: ReturnType<typeof setInterval> | undefined;
-
-function startLobbyPoll() {
-    stopLobbyPoll();
-    lobbyPoll = setInterval(() => {
-        if (store.room?.status === 'WAITING') void store.fetchRoom(code);
-        else stopLobbyPoll();
-    }, 3000);
-}
-
-function stopLobbyPoll() {
-    clearInterval(lobbyPoll);
-    lobbyPoll = undefined;
-}
-
 async function boot() {
     notFound.value = false;
     try {
@@ -118,7 +103,6 @@ async function boot() {
         return;
     }
     store.connect(code);
-    startLobbyPoll();
 }
 
 watch(
@@ -157,7 +141,6 @@ async function joinNow() {
 
 onMounted(boot);
 onUnmounted(() => {
-    stopLobbyPoll();
     store.disconnect();
 });
 </script>

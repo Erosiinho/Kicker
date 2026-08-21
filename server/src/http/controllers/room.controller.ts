@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Server } from 'socket.io';
 import RoomService from '../../services/room.service';
 import asyncController from './controller';
 import { BadRequestError } from '../errors';
@@ -15,7 +16,10 @@ const joinRoomSchema = z.object({
 });
 
 export default class RoomController {
-    constructor(private roomService: RoomService) {}
+    constructor(
+        private roomService: RoomService,
+        private io: Server,
+    ) {}
 
     create = asyncController(async (req, res) => {
         const parsed = createRoomSchema.safeParse(req.body);
@@ -38,6 +42,8 @@ export default class RoomController {
             parsed.data.displayName,
             parsed.data.guestId,
         );
+        // Mirrors performLeave in game.gateway.ts — same room:updated broadcast, other side of the trip.
+        this.io.to(result.roomCode).emit('room:updated', await this.roomService.getRoom(result.roomCode));
         res.status(200).json(result);
     });
 
