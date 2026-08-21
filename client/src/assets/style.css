@@ -270,11 +270,10 @@
 
   /* --- dossier cards (signature element) --- */
   .card-dossier {
-    @apply relative flex flex-col overflow-hidden rounded-[var(--radius-md)];
+    @apply relative flex flex-col overflow-hidden rounded-[var(--radius-md)] aspect-[3/5] sm:aspect-[3/4];
     background: linear-gradient(165deg, #1c3b27, var(--pitch-deep));
     border: 1px solid var(--line-strong);
     box-shadow: var(--shadow-card);
-    aspect-ratio: 3 / 4;
   }
 
   .card-dossier-photo {

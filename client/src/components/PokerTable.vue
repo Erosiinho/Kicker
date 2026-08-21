@@ -43,15 +43,17 @@
 
       <div class="flex flex-col gap-6 lg:sticky lg:top-8">
         <div class="panel-turf items-center">
-          <PlayerSeat
-            v-if="me"
-            :room-player="me"
-            :player-state="store.me"
-            :is-dealer="me.seat === store.gameState?.dealerSeat"
-            :is-turn="me.userId === store.gameState?.turnUserId"
-            is-me
-          />
-          <YourGuess />
+          <div class="flex w-full flex-wrap items-start justify-center gap-4 sm:flex-col sm:items-center sm:gap-5">
+            <PlayerSeat
+              v-if="me"
+              :room-player="me"
+              :player-state="store.me"
+              :is-dealer="me.seat === store.gameState?.dealerSeat"
+              :is-turn="me.userId === store.gameState?.turnUserId"
+              is-me
+            />
+            <YourGuess />
+          </div>
           <BettingControls />
         </div>
 
