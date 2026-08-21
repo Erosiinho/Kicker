@@ -46,8 +46,10 @@ const raiseMax = computed(() => (store.me ? store.me.currentBet + store.me.chips
 const raiseMin = computed(() => Math.min(currentBet.value + (store.gameState?.minRaise ?? 0), raiseMax.value));
 
 const raiseAmount = ref(raiseMin.value);
-watch([raiseMin, raiseMax, visible], () => {
-    if (visible.value) raiseAmount.value = raiseMin.value;
+// Keep the slider aligned with the current bet at all times (not just while visible) so it's
+// never showing a stale position left over from before someone else raised.
+watch([raiseMin, raiseMax], () => {
+    raiseAmount.value = raiseMin.value;
 });
 
 function raise() {

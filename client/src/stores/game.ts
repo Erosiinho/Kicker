@@ -163,6 +163,7 @@ export const useGameStore = defineStore('game', () => {
                 gameState.value.revealedCommunityPlayerIds = payload.revealedCommunityPlayerIds;
                 gameState.value.pot = payload.pot;
                 gameState.value.currentBet = payload.currentBet;
+                gameState.value.minRaise = payload.minRaise;
                 gameState.value.turnUserId = payload.turnUserId;
                 gameState.value.players = payload.players;
             }
@@ -173,6 +174,7 @@ export const useGameStore = defineStore('game', () => {
             if (gameState.value) {
                 gameState.value.pot = payload.potTotal;
                 gameState.value.currentBet = payload.currentBet;
+                gameState.value.minRaise = payload.minRaise;
                 gameState.value.turnUserId = payload.nextTurnUserId;
                 gameState.value.players = payload.players;
             }

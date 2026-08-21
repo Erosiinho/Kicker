@@ -128,6 +128,7 @@ export interface StageAdvancedPayload {
     revealedCommunityPlayerIds: number[];
     pot: number;
     currentBet: number;
+    minRaise: number;
     turnUserId: number | null;
     players: PlayerState[];
 }
@@ -138,6 +139,7 @@ export interface PlayerActedPayload {
     amount: number;
     potTotal: number;
     currentBet: number;
+    minRaise: number;
     nextTurnUserId: number | null;
     players: PlayerState[];
 }
