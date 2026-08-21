@@ -9,57 +9,74 @@
       </p>
     </div>
 
-    <div class="panel-turf">
-      <div class="flex flex-col gap-1.5">
-        <label class="field-label" for="displayName">Your name</label>
-        <input
-          id="displayName"
-          v-model="displayName"
-          class="field-input"
-          placeholder="e.g. Kev"
-          maxlength="40"
-          autocomplete="off"
-        />
-      </div>
+    <div v-if="mode === 'choose'" class="flex flex-col gap-4">
+      <button class="btn btn-kickoff btn-big" @click="mode = 'create'">Create room</button>
+      <button class="btn btn-ghost btn-big" @click="mode = 'join'">Join room</button>
+    </div>
 
-      <div class="flex flex-col gap-1.5">
-        <label class="field-label" for="maxRounds">Rounds this match</label>
-        <input
-          id="maxRounds"
-          v-model.number="maxRounds"
-          class="field-input"
-          type="number"
-          min="1"
-          max="50"
-        />
-      </div>
+    <div v-else class="panel-turf">
+      <button class="back-link" type="button" @click="backToChoice">← Back</button>
 
-      <button class="btn btn-kickoff" :disabled="!canCreate || creating" @click="createRoom">
-        {{ creating ? 'Setting up…' : 'Create a room' }}
-      </button>
+      <template v-if="mode === 'create'">
+        <div class="flex flex-col gap-1.5">
+          <label class="field-label" for="displayName">Your name</label>
+          <input
+            id="displayName"
+            v-model="displayName"
+            class="field-input"
+            placeholder="e.g. Kev"
+            maxlength="40"
+            autocomplete="off"
+          />
+        </div>
 
-      <div class="flex items-center gap-3">
-        <div class="divider flex-1" />
-        <span class="text-xs uppercase tracking-wide" style="color: var(--chalk-faint)">or</span>
-        <div class="divider flex-1" />
-      </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="field-label" for="maxRounds">Rounds this match</label>
+          <input
+            id="maxRounds"
+            v-model.number="maxRounds"
+            class="field-input"
+            type="number"
+            min="1"
+            max="50"
+          />
+        </div>
 
-      <div class="flex flex-col gap-1.5">
-        <label class="field-label" for="roomCode">Room code</label>
-        <input
-          id="roomCode"
-          v-model="roomCode"
-          class="field-input field-input--code"
-          placeholder="XXXXXX"
-          maxlength="6"
-          autocomplete="off"
-          @input="roomCode = roomCode.toUpperCase()"
-        />
-      </div>
+        <button class="btn btn-kickoff" :disabled="!canCreate || creating" @click="createRoom">
+          {{ creating ? 'Setting up…' : 'Create a room' }}
+        </button>
+      </template>
 
-      <button class="btn btn-ghost" :disabled="!canJoin || joining" @click="joinRoom">
-        {{ joining ? 'Joining…' : 'Join room' }}
-      </button>
+      <template v-else>
+        <div class="flex flex-col gap-1.5">
+          <label class="field-label" for="displayName">Your name</label>
+          <input
+            id="displayName"
+            v-model="displayName"
+            class="field-input"
+            placeholder="e.g. Kev"
+            maxlength="40"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="field-label" for="roomCode">Room code</label>
+          <input
+            id="roomCode"
+            v-model="roomCode"
+            class="field-input field-input--code"
+            placeholder="XXXXXX"
+            maxlength="6"
+            autocomplete="off"
+            @input="roomCode = roomCode.toUpperCase()"
+          />
+        </div>
+
+        <button class="btn btn-ghost" :disabled="!canJoin || joining" @click="joinRoom">
+          {{ joining ? 'Joining…' : 'Join room' }}
+        </button>
+      </template>
 
       <p v-if="error" class="pill pill-red w-fit self-center">{{ error }}</p>
     </div>
@@ -77,12 +94,18 @@ const router = useRouter();
 const store = useGameStore();
 const userStore = useUserStore();
 
+const mode = ref<'choose' | 'create' | 'join'>('choose');
 const displayName = ref(userStore.displayName);
 const roomCode = ref('');
 const maxRounds = ref(10);
 const creating = ref(false);
 const joining = ref(false);
 const error = ref<string | null>(null);
+
+function backToChoice() {
+    mode.value = 'choose';
+    error.value = null;
+}
 
 const hasName = computed(() => displayName.value.trim().length > 0);
 const canCreate = computed(

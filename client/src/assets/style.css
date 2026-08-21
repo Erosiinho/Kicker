@@ -196,6 +196,20 @@
     @apply px-3.5 py-2 text-xs;
   }
 
+  .btn-big {
+    @apply w-full px-6 py-6 text-lg;
+  }
+
+  .back-link {
+    font-family: var(--font-display);
+    @apply -mt-1 -mb-1 w-fit text-xs font-medium uppercase tracking-wide transition-colors;
+    color: var(--chalk-faint);
+  }
+
+  .back-link:hover {
+    color: var(--gold);
+  }
+
   /* --- badges / pills --- */
   .pill {
     @apply inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold;
