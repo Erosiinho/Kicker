@@ -70,6 +70,12 @@ export default class RoomManager {
             // room.service#joinRoom's "is this room still joinable" check
             // actually engages instead of silently letting late joiners in.
             await this.roomRepository.updateStatus(roomId, 'IN_PROGRESS');
+            // Tell every connected client too — RoomView switches out of the lobby off
+            // room.status, not off any game event, so without this it stays stuck on the
+            // lobby view (round ticks up in the header, but nothing swaps in PokerTable)
+            // until a manual refresh re-fetches the room over REST.
+            const updatedRoom = await this.roomRepository.findByCode(roomCode);
+            if (updatedRoom) events.push({ scope: 'room', type: 'room:updated', payload: updatedRoom });
         }
         await this.handleEvents(roomCode, roomId, engine, events);
     }
