@@ -125,6 +125,15 @@ function leaveInGame() {
     }
 }
 
+// Fermeture d'onglet/rafraîchissement/navigation externe pendant une partie en cours : le
+// navigateur ignore tout texte personnalisé et affiche sa propre popup native, mais preventDefault
+// + returnValue est le déclencheur requis (Chrome exige returnValue, les autres s'en contentent).
+function handleBeforeUnload(e: BeforeUnloadEvent) {
+    if (store.room?.status !== 'IN_PROGRESS') return;
+    e.preventDefault();
+    e.returnValue = '';
+}
+
 async function joinNow() {
     joining.value = true;
     joinError.value = null;
@@ -139,8 +148,12 @@ async function joinNow() {
     }
 }
 
-onMounted(boot);
+onMounted(() => {
+    boot();
+    window.addEventListener('beforeunload', handleBeforeUnload);
+});
 onUnmounted(() => {
     store.disconnect();
+    window.removeEventListener('beforeunload', handleBeforeUnload);
 });
 </script>
