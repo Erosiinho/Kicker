@@ -27,6 +27,22 @@
       </p>
     </div>
 
+    <div v-if="guessStandings.length > 0" class="flex flex-col gap-1.5 w-full">
+      <span class="field-label">Guesses</span>
+      <div
+        v-for="row in guessStandings"
+        :key="row.userId"
+        class="flex items-center justify-between gap-3 text-sm"
+        :style="row.isWinner ? { color: 'var(--gold)' } : { color: 'var(--chalk-dim)' }"
+      >
+        <span class="truncate">{{ store.playerName(row.userId) }}</span>
+        <span class="flex-1 truncate text-right" style="color: var(--chalk-faint)">
+          {{ store.footballPlayer(row.footballPlayerId)?.name ?? '…' }}
+        </span>
+        <span class="stat-mono font-semibold">{{ row.linkCount }}/5</span>
+      </div>
+    </div>
+
     <template v-if="store.gameState?.stage === 'ROUND_END'">
       <button v-if="store.isHost" class="btn btn-kickoff" @click="store.ready()">Start next round</button>
       <p v-else class="text-sm" style="color: var(--chalk-faint)">Waiting for the host to start the next round…</p>
@@ -62,4 +78,12 @@ const winnerNames = computed(() => (reveal.value?.winners ?? []).map((id) => sto
 const standings = computed(() =>
     [...(store.matchResult?.finalChips ?? [])].sort((a, b) => b.chips - a.chips),
 );
+
+/** Every non-folded player's guess this round, ranked by how many community cards it links to — the closest link(s) won the pot (a tie splits it). */
+const guessStandings = computed(() => {
+    const winners = new Set(reveal.value?.winners ?? []);
+    return [...(reveal.value?.guessScores ?? [])]
+        .sort((a, b) => b.linkCount - a.linkCount)
+        .map((s) => ({ ...s, isWinner: winners.has(s.userId) }));
+});
 </script>

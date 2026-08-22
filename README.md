@@ -4,14 +4,14 @@ A real-time multiplayer party game that borrows Texas Hold'em's structure — pr
 
 The name plays on the double meaning: a **kicker** is someone who kicks a ball, and in poker a **kicker** is the side card that breaks a tie — fitting, since this game is exactly that overlap.
 
-Each round the server secretly picks a **Mystery Player** and reveals five other footballers (the "community cards") who really played alongside them at some club or national team. Players bet across four streets while piecing together the clues, then lock in a guess. Anyone who guesses right splits the pot.
+Each round the server secretly picks a **Mystery Player** and reveals five other footballers (the "community cards") who really played alongside them at some club or national team. Players bet across four streets while piecing together the clues, then lock in a guess. Whoever's guess actually played alongside the most of those five community players wins the pot — it doesn't have to be the exact Mystery Player, just the closest link; ties split it.
 
 ## How a round works
 
 1. **Deal** — the Link Engine picks a Mystery Player and samples five real ex-teammates as community cards.
-2. **Bet & deduce** — Pre-flop, Flop (3 cards), Turn (+1), River (+1), with a betting round between each stage. A guess can be submitted (and changed) at any point once betting starts — there's no separate "reveal your hand" moment.
+2. **Bet & deduce** — Pre-flop (1 card), Flop (+2), Turn (+1), River (+1), with a betting round between each stage. Unlike real Hold'em there are no private hole cards, so pre-flop reveals a card too — otherwise that first betting round would carry no information at all. A guess can be submitted (and changed) at any point once betting starts — there's no separate "reveal your hand" moment.
 3. **Showdown** — non-folded players have a time limit to lock in a final guess.
-4. **Reveal** — the Mystery Player and the organization(s) that link everyone are announced. Correct guessers split the pot; if nobody guessed right, the pot carries over to the next round.
+4. **Reveal** — the Mystery Player is announced, along with how many of the 5 community cards each guess actually links to. Whoever's guess has the most links wins the pot (ties split it); if every guess has zero links, the pot carries over to the next round.
 
 ## Tech stack
 

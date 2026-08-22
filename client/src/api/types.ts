@@ -161,12 +161,20 @@ export interface ShowdownStartedPayload {
     timeLimitMs: number;
 }
 
+/** One non-folded player's guess scored against the round's 5 community cards (see server's GuessScore). */
+export interface GuessScore {
+    userId: number;
+    footballPlayerId: number;
+    linkCount: number;
+}
+
 export interface RoundRevealedPayload {
     mysteryPlayerId: number;
     communityPlayerIds: number[];
     winners: number[];
     potAwarded: number;
     potTotal: number;
+    guessScores: GuessScore[];
 }
 
 export interface MatchEndedPayload {

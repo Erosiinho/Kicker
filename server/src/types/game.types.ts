@@ -45,6 +45,18 @@ export interface RoundScenario {
     communityPlayerIds: [number, number, number, number, number];
 }
 
+/**
+ * One non-folded player's guess scored against the round's 5 community cards — the
+ * "closest link" win condition (link-engine.service.ts#scoreGuesses): guessing the exact
+ * Mystery Player always scores 5 (every community card is one of its teammates by
+ * construction), but a guess merely close to it can still win if nobody did better.
+ */
+export interface GuessScore {
+    userId: number;
+    footballPlayerId: number;
+    linkCount: number;
+}
+
 export interface PlayerState {
     userId: number;
     seat: number;

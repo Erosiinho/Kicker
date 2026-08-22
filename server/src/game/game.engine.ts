@@ -3,6 +3,7 @@ import {
     GameEvent,
     GameState,
     GUESSABLE_STAGES,
+    GuessScore,
     PlayerActionType,
     PlayerState,
     RoundScenario,
@@ -31,6 +32,14 @@ const BETTING_STAGE_AFTER_REVEAL: Partial<Record<Stage, Stage>> = {
     TURN: 'TURN_BETTING',
     RIVER: 'RIVER_BETTING',
 };
+
+// How many community cards go up before each betting round — 1/2/1/1, unlike Hold'em's 0/3/1/1.
+// There are no private hole cards here (see PlayerState#guess's doc), so unlike real poker a
+// preflop round with zero community cards on the table would be pure noise: nobody has any
+// signal yet to bet on. Revealing one card first gives every street, preflop included, at least
+// one clue behind it.
+const PREFLOP_REVEAL_COUNT = 1;
+const FLOP_REVEAL_COUNT = 2;
 
 /**
  * One instance per active room (held by game/RoomManager.ts). Pure state
@@ -216,6 +225,10 @@ export default class GameEngine {
             payload: { round: this.state.round, dealerSeat: this.state.dealerSeat },
         };
 
+        // One card up before betting even opens, so preflop isn't a totally blind round — see
+        // PREFLOP_REVEAL_COUNT's doc. beginBettingStage's own stage:advanced payload carries it.
+        this.revealNextCommunityCards(PREFLOP_REVEAL_COUNT);
+
         return [dealEvent, ...this.beginBettingStage('PREFLOP_BETTING')];
     }
 
@@ -303,16 +316,45 @@ export default class GameEngine {
         if (this.state.stage === 'SHOWDOWN') {
             const nonFolded = this.state.players.filter((p) => p.isActive && !p.isFolded);
             if (nonFolded.every((p) => p.guess !== null)) {
-                return [...events, ...this.resolveShowdown()];
+                return [...events, { scope: 'room', type: 'showdown:ready', payload: {} }];
             }
         }
         return events;
     }
 
-    /** Called by RoomManager when a room's SHOWDOWN timer expires — unsubmitted guesses count as incorrect. */
+    /**
+     * Called by RoomManager when a room's SHOWDOWN timer expires. Just flags the showdown ready
+     * to resolve — same as every-guess-in in submitGuess — rather than resolving on the spot: see
+     * resolveShowdownWithWinners for why. Unsubmitted guesses simply won't appear in
+     * getActiveGuesses(), so they can't win either way.
+     */
     forceResolveShowdown(): GameEvent[] {
         if (this.state.stage !== 'SHOWDOWN') return [];
-        return this.resolveShowdown();
+        return [{ scope: 'room', type: 'showdown:ready', payload: {} }];
+    }
+
+    /** Non-folded active players' current guesses — what RoomManager scores against the community cards to determine the showdown's winner(s) (see resolveShowdownWithWinners). */
+    getActiveGuesses(): { userId: number; footballPlayerId: number }[] {
+        return this.state.players
+            .filter((p) => p.isActive && !p.isFolded && p.guess !== null)
+            .map((p) => ({ userId: p.userId, footballPlayerId: p.guess as number }));
+    }
+
+    /** This round's 5 community card ids — needed by RoomManager to score guesses; otherwise kept server-internal pre-REVEAL (see getSnapshot's redaction). */
+    getCommunityPlayerIds(): number[] {
+        return this.scenario ? [...this.scenario.communityPlayerIds] : [];
+    }
+
+    /**
+     * Finalizes SHOWDOWN once RoomManager has scored every active guess externally — counting
+     * how many community cards a guess shares with is a DB lookup (link-engine.service.ts),
+     * which this pure, DB-free engine deliberately never does itself (see the class doc). A
+     * no-op if the stage has already moved past SHOWDOWN, e.g. everyone but one player folded
+     * out mid-scoring and resolveRound already ran via that path.
+     */
+    resolveShowdownWithWinners(winnerUserIds: number[], guessScores: GuessScore[]): GameEvent[] {
+        if (this.state.stage !== 'SHOWDOWN') return [];
+        return this.resolveRound(winnerUserIds, guessScores);
     }
 
     /** Advances past REVEAL once the gateway has had a chance to persist round history / broadcast the reveal. */
@@ -353,15 +395,12 @@ export default class GameEngine {
         ];
     }
 
-    private resolveShowdown(): GameEvent[] {
-        const scenario = this.scenario!;
-        const nonFolded = this.state.players.filter((p) => p.isActive && !p.isFolded);
-        const winners = nonFolded.filter((p) => p.guess === scenario.mysteryPlayerId).map((p) => p.userId);
-        return this.resolveRound(winners);
-    }
-
-    /** PLAN.md §5's showdown resolution: even split, remainder discarded, no-winner carryover. Also used for uncontested folds. */
-    private resolveRound(winnerUserIds: number[]): GameEvent[] {
+    /**
+     * PLAN.md §5's showdown resolution: even split, remainder discarded, no-winner carryover.
+     * Also used for uncontested folds, where there's no scoring to report — guessScores defaults
+     * to empty rather than being computed, since the round never reached a real showdown.
+     */
+    private resolveRound(winnerUserIds: number[], guessScores: GuessScore[] = []): GameEvent[] {
         const scenario = this.scenario!;
         this.state.mysteryPlayerId = scenario.mysteryPlayerId;
         this.state.revealedCommunityPlayerIds = [...scenario.communityPlayerIds];
@@ -393,6 +432,7 @@ export default class GameEngine {
                     winners: winnerUserIds,
                     potAwarded,
                     potTotal,
+                    guessScores,
                 },
             },
         ];
@@ -416,13 +456,9 @@ export default class GameEngine {
     }
 
     private revealCommunityStage(stage: Stage): GameEvent[] {
-        const scenario = this.scenario!;
-        const revealCount = stage === 'FLOP' ? 3 : 1;
-        const nextIds = scenario.communityPlayerIds.slice(
-            this.state.revealedCommunityPlayerIds.length,
-            this.state.revealedCommunityPlayerIds.length + revealCount,
-        );
-        this.state.revealedCommunityPlayerIds.push(...nextIds);
+        // FLOP makes up the rest of the first 3 (1 already went up preflop); TURN/RIVER add 1 each.
+        const revealCount = stage === 'FLOP' ? FLOP_REVEAL_COUNT : 1;
+        this.revealNextCommunityCards(revealCount);
         this.state.stage = stage;
 
         const revealEvent: GameEvent = {
@@ -441,6 +477,16 @@ export default class GameEngine {
 
         const bettingStage = BETTING_STAGE_AFTER_REVEAL[stage]!;
         return [revealEvent, ...this.beginBettingStage(bettingStage)];
+    }
+
+    /** Reveals the next `count` community cards, in scenario order — shared by startRound's preflop card and revealCommunityStage's FLOP/TURN/RIVER reveals. */
+    private revealNextCommunityCards(count: number): void {
+        const scenario = this.scenario!;
+        const nextIds = scenario.communityPlayerIds.slice(
+            this.state.revealedCommunityPlayerIds.length,
+            this.state.revealedCommunityPlayerIds.length + count,
+        );
+        this.state.revealedCommunityPlayerIds.push(...nextIds);
     }
 
     private beginBettingStage(stage: Stage): GameEvent[] {

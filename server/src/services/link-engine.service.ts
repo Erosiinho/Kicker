@@ -1,5 +1,5 @@
 import FootballPlayerRepository from '../repositories/football-player.repository';
-import { RoundScenario } from '../types/game.types';
+import { GuessScore, RoundScenario } from '../types/game.types';
 
 const MIN_ORGS_FOR_MYSTERY = Number(process.env.MIN_ORGS_FOR_MYSTERY) || 3;
 const COMMUNITY_CARD_COUNT = 5;
@@ -110,6 +110,35 @@ export default class LinkEngineService {
         throw new InsufficientDataError(
             'Could not generate a valid round scenario with the current dataset',
         );
+    }
+
+    /**
+     * Scores every showdown guess by how many of the round's 5 community cards are actual
+     * teammates of the guessed player — the "closest link" win condition that superseded the
+     * old exact-match-only rule. Guessing the Mystery Player itself always scores
+     * COMMUNITY_CARD_COUNT (every community card is one of its teammates by construction — see
+     * generateRoundScenario), so it's still always at least as good as any other guess; this
+     * just adds partial credit for guesses that are merely close. Ties at the highest score
+     * split the pot, exactly like tying on an exact match did before; if every guess scores 0
+     * there's no winner and the pot carries over, same as before too.
+     */
+    async scoreGuesses(
+        communityPlayerIds: readonly number[],
+        guesses: { userId: number; footballPlayerId: number }[],
+    ): Promise<{ winnerUserIds: number[]; guessScores: GuessScore[] }> {
+        const guessScores: GuessScore[] = [];
+        for (const { userId, footballPlayerId } of guesses) {
+            const teammates = await this.footballPlayerRepository.getTeammateIds(footballPlayerId);
+            const teammateIds = new Set(teammates.map((t) => t.id));
+            const linkCount = communityPlayerIds.filter((id) => teammateIds.has(id)).length;
+            guessScores.push({ userId, footballPlayerId, linkCount });
+        }
+
+        const bestScore = Math.max(0, ...guessScores.map((s) => s.linkCount));
+        const winnerUserIds =
+            bestScore > 0 ? guessScores.filter((s) => s.linkCount === bestScore).map((s) => s.userId) : [];
+
+        return { winnerUserIds, guessScores };
     }
 
     /**

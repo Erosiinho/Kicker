@@ -40,6 +40,12 @@ describe('GameEngine', () => {
         const engine = new GameEngine('ABC123', PLAYERS, 5, 1000);
         engine.startRound(makeScenario());
 
+        // Unlike real Hold'em, there are no private hole cards here, so a preflop round with
+        // zero community cards up would be pure noise — one card is revealed before betting
+        // even opens, so every street (preflop included) has at least one clue behind it.
+        expect(engine.getSnapshot().stage).toBe('PREFLOP_BETTING');
+        expect(engine.getSnapshot().revealedCommunityPlayerIds).toHaveLength(1);
+
         actUntilStageChanges(engine, 'check');
         expect(engine.getSnapshot().stage).toBe('FLOP_BETTING');
         expect(engine.getSnapshot().revealedCommunityPlayerIds).toHaveLength(3);
@@ -57,15 +63,80 @@ describe('GameEngine', () => {
 
         engine.submitGuess(1, MYSTERY_PLAYER_ID);
         engine.submitGuess(2, 1);
-        const events = engine.submitGuess(3, 2);
+        const readyEvents = engine.submitGuess(3, 2);
+
+        // Scoring guesses against the board is a DB lookup (link-engine.service.ts), which this
+        // pure engine deliberately never does — it just flags the showdown ready to resolve once
+        // every non-folded player has a guess in, and waits for the winner(s) to be reported back.
+        expect(payloadOf(readyEvents, 'showdown:ready')).toBeDefined();
+
+        const guessScores = [
+            { userId: 1, footballPlayerId: MYSTERY_PLAYER_ID, linkCount: 5 },
+            { userId: 2, footballPlayerId: 1, linkCount: 0 },
+            { userId: 3, footballPlayerId: 2, linkCount: 0 },
+        ];
+        const events = engine.resolveShowdownWithWinners([1], guessScores);
 
         const revealPayload = payloadOf(events, 'round:revealed');
-        expect(revealPayload).toMatchObject({ mysteryPlayerId: MYSTERY_PLAYER_ID, winners: [1], potAwarded: 0 });
+        expect(revealPayload).toMatchObject({
+            mysteryPlayerId: MYSTERY_PLAYER_ID,
+            winners: [1],
+            potAwarded: 0,
+            guessScores,
+        });
 
         const snapshot = engine.getSnapshot();
         expect(snapshot.stage).toBe('REVEAL');
         expect(snapshot.mysteryPlayerId).toBe(MYSTERY_PLAYER_ID);
         expect(snapshot.players.find((p) => p.userId === 1)!.chips).toBe(1000); // nobody bet, so no chip movement
+    });
+
+    it('splits the pot between every guess tied for the highest link count, not just an exact match', () => {
+        const engine = new GameEngine('ABC123', PLAYERS, 5, 1000);
+        engine.startRound(makeScenario());
+
+        const raiser = engine.getSnapshot().turnUserId!;
+        engine.applyAction(raiser, 'raise', 60);
+        actUntilStageChanges(engine, 'call');
+        actUntilStageChanges(engine, 'check'); // flop
+        actUntilStageChanges(engine, 'check'); // turn
+        actUntilStageChanges(engine, 'check'); // river
+        expect(engine.getSnapshot().stage).toBe('SHOWDOWN');
+
+        engine.submitGuess(1, 11);
+        engine.submitGuess(2, 22);
+        const readyEvents = engine.submitGuess(3, 33);
+        expect(payloadOf(readyEvents, 'showdown:ready')).toBeDefined();
+
+        // Neither 1 nor 2 guessed the actual Mystery Player, but both linked to 3 of the 5
+        // community cards — tied for best, so they split the pot exactly like an exact-match
+        // tie would have. Player 3's guess links to fewer cards and wins nothing.
+        const events = engine.resolveShowdownWithWinners([1, 2], [
+            { userId: 1, footballPlayerId: 11, linkCount: 3 },
+            { userId: 2, footballPlayerId: 22, linkCount: 3 },
+            { userId: 3, footballPlayerId: 33, linkCount: 1 },
+        ]);
+
+        const revealPayload = payloadOf(events, 'round:revealed');
+        expect(revealPayload).toMatchObject({ winners: [1, 2], potTotal: 180, potAwarded: 90 });
+    });
+
+    it('forceResolveShowdown just flags the showdown ready (winners are reported back separately), and is a no-op outside SHOWDOWN', () => {
+        const engine = new GameEngine('ABC123', PLAYERS, 5, 1000);
+        expect(engine.forceResolveShowdown()).toEqual([]); // still WAITING
+
+        engine.startRound(makeScenario());
+        expect(engine.forceResolveShowdown()).toEqual([]); // still PREFLOP_BETTING
+
+        actUntilStageChanges(engine, 'check');
+        actUntilStageChanges(engine, 'check');
+        actUntilStageChanges(engine, 'check');
+        actUntilStageChanges(engine, 'check');
+        expect(engine.getSnapshot().stage).toBe('SHOWDOWN');
+
+        const events = engine.forceResolveShowdown();
+        expect(payloadOf(events, 'showdown:ready')).toBeDefined();
+        expect(engine.getSnapshot().stage).toBe('SHOWDOWN'); // still waiting on resolveShowdownWithWinners
     });
 
     it('rejects an action from a player whose turn it is not', () => {
@@ -137,7 +208,14 @@ describe('GameEngine', () => {
 
         engine.submitGuess(1, 1);
         engine.submitGuess(2, 2);
-        const events = engine.submitGuess(3, 3);
+        engine.submitGuess(3, 3);
+
+        // Every guess links to zero community cards — no winner, so the pot carries over.
+        const events = engine.resolveShowdownWithWinners([], [
+            { userId: 1, footballPlayerId: 1, linkCount: 0 },
+            { userId: 2, footballPlayerId: 2, linkCount: 0 },
+            { userId: 3, footballPlayerId: 3, linkCount: 0 },
+        ]);
 
         const revealPayload = payloadOf(events, 'round:revealed');
         expect(revealPayload).toMatchObject({ winners: [], potAwarded: 0, potTotal: 180 });
@@ -319,6 +397,8 @@ describe('GameEngine', () => {
         engine.submitGuess(1, MYSTERY_PLAYER_ID);
         engine.submitGuess(2, 1);
         engine.submitGuess(3, 2);
+        engine.resolveShowdownWithWinners([1], [{ userId: 1, footballPlayerId: MYSTERY_PLAYER_ID, linkCount: 5 }]);
+        expect(engine.getSnapshot().stage).toBe('REVEAL');
 
         const finishEvents = engine.finishRound();
         expect(engine.getSnapshot().stage).toBe('MATCH_END');

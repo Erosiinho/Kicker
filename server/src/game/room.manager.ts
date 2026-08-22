@@ -2,7 +2,7 @@ import GameEngine, { SeatedPlayer, SHOWDOWN_TIME_LIMIT_MS } from './game.engine'
 import LinkEngineService from '../services/link-engine.service';
 import RoundHistoryService from '../services/round-history.service';
 import RoomRepository from '../repositories/room.repository';
-import { GameEvent, PlayerActionType } from '../types/game.types';
+import { GameEvent, GuessScore, PlayerActionType } from '../types/game.types';
 
 const DEFAULT_STARTING_CHIPS = 1000;
 
@@ -12,6 +12,7 @@ interface RevealPayload {
     winners: number[];
     potAwarded: number;
     potTotal: number;
+    guessScores: GuessScore[];
 }
 
 export type EmitEvents = (roomCode: string, events: GameEvent[]) => void;
@@ -128,6 +129,21 @@ export default class RoomManager {
 
         if (events.some((e) => e.type === 'showdown:started')) {
             this.armShowdownTimer(roomCode, roomId, engine);
+        }
+
+        if (events.some((e) => e.type === 'showdown:ready')) {
+            // Clear before the async scoring below, not after — otherwise the timer could fire
+            // mid-scoring and race a second resolution attempt for the same round.
+            this.clearShowdownTimer(roomCode);
+            const guesses = engine.getActiveGuesses();
+            const communityPlayerIds = engine.getCommunityPlayerIds();
+            const { winnerUserIds, guessScores } = await this.linkEngineService.scoreGuesses(
+                communityPlayerIds,
+                guesses,
+            );
+            const resolveEvents = engine.resolveShowdownWithWinners(winnerUserIds, guessScores);
+            await this.handleEvents(roomCode, roomId, engine, resolveEvents);
+            return;
         }
 
         const revealEvent = events.find((e) => e.type === 'round:revealed');

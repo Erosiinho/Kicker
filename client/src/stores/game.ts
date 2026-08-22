@@ -210,7 +210,11 @@ export const useGameStore = defineStore('game', () => {
                 gameState.value.revealedCommunityPlayerIds = payload.communityPlayerIds;
             }
             lastReveal.value = payload;
-            void ensureFootballPlayers([payload.mysteryPlayerId, ...payload.communityPlayerIds]);
+            void ensureFootballPlayers([
+                payload.mysteryPlayerId,
+                ...payload.communityPlayerIds,
+                ...payload.guessScores.map((s) => s.footballPlayerId),
+            ]);
         });
 
         socket.on('match:ended', (payload: MatchEndedPayload) => {
