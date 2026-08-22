@@ -7,14 +7,14 @@
         <div class="stage-rail">
           <span
             v-for="group in stageGroups"
-            :key="group.label"
+            :key="group.key"
             class="stage-step"
             :class="{
               'stage-step--active': group.active,
               'stage-step--done': group.done,
             }"
           >
-            {{ group.label }}
+            {{ t(`table.${group.key}`) }}
           </span>
         </div>
 
@@ -33,7 +33,7 @@
           </div>
 
           <div class="scoreboard">
-            <span class="scoreboard-label">Pot</span>
+            <span class="scoreboard-label">{{ t('table.pot') }}</span>
             <span class="scoreboard-value">{{ store.gameState?.pot ?? 0 }}</span>
           </div>
 
@@ -68,6 +68,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import PlayerSeat from './PlayerSeat.vue';
 import CommunityBoard from './CommunityBoard.vue';
 import YourGuess from './YourGuess.vue';
@@ -80,6 +81,7 @@ import { useGameStore } from '@/stores/game';
 import type { PlayerState, Stage } from '@/api/types';
 
 const store = useGameStore();
+const { t } = useI18n();
 
 const me = computed(() => store.seatedPlayers.find((p) => p.userId === store.yourUserId) ?? null);
 const opponents = computed(() => store.seatedPlayers.filter((p) => p.userId !== store.yourUserId));
@@ -90,21 +92,21 @@ function playerState(userId: number): PlayerState | undefined {
 
 const showReveal = computed(() => ['REVEAL', 'ROUND_END', 'MATCH_END'].includes(store.gameState?.stage ?? ''));
 
-const STAGE_GROUPS: { label: string; stages: Stage[] }[] = [
-    { label: 'Deal', stages: ['WAITING', 'DEALING'] },
-    { label: 'Pre', stages: ['PREFLOP_BETTING'] },
-    { label: 'Flop', stages: ['FLOP', 'FLOP_BETTING'] },
-    { label: 'Turn', stages: ['TURN', 'TURN_BETTING'] },
-    { label: 'River', stages: ['RIVER', 'RIVER_BETTING'] },
-    { label: 'Showdown', stages: ['SHOWDOWN'] },
-    { label: 'Reveal', stages: ['REVEAL', 'ROUND_END', 'MATCH_END'] },
+const STAGE_GROUPS: { key: string; stages: Stage[] }[] = [
+    { key: 'stageDeal', stages: ['WAITING', 'DEALING'] },
+    { key: 'stagePre', stages: ['PREFLOP_BETTING'] },
+    { key: 'stageFlop', stages: ['FLOP', 'FLOP_BETTING'] },
+    { key: 'stageTurn', stages: ['TURN', 'TURN_BETTING'] },
+    { key: 'stageRiver', stages: ['RIVER', 'RIVER_BETTING'] },
+    { key: 'stageShowdown', stages: ['SHOWDOWN'] },
+    { key: 'stageReveal', stages: ['REVEAL', 'ROUND_END', 'MATCH_END'] },
 ];
 
 const stageGroups = computed(() => {
     const currentStage = store.gameState?.stage;
     const currentIndex = STAGE_GROUPS.findIndex((g) => g.stages.includes(currentStage as Stage));
     return STAGE_GROUPS.map((g, i) => ({
-        label: g.label,
+        key: g.key,
         active: i === currentIndex,
         done: currentIndex >= 0 && i < currentIndex,
     }));

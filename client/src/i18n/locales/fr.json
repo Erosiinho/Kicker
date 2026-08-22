@@ -1,0 +1,134 @@
+{
+  "common": {
+    "rules": "Règles",
+    "close": "Fermer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "you": "Vous",
+    "host": "Hôte",
+    "copy": "Copier",
+    "copied": "Copié"
+  },
+  "home": {
+    "subtitle": "Cinq cartes communes. Un footballeur mystère qui a joué avec chacune d'elles, révélées dans l'ordre où leurs chemins se sont croisés. Misez vos jetons selon votre certitude — puis devinez.",
+    "createRoom": "Créer une partie",
+    "joinRoom": "Rejoindre une partie",
+    "back": "← Retour",
+    "yourName": "Votre nom",
+    "namePlaceholder": "ex. Kev",
+    "roundsThisMatch": "Manches de la partie",
+    "settingUp": "Préparation…",
+    "createARoom": "Créer la partie",
+    "roomCode": "Code de la partie",
+    "roomCodePlaceholder": "XXXXXX",
+    "joining": "Connexion…"
+  },
+  "room": {
+    "round": "Manche {current} / {max}",
+    "leave": "Quitter",
+    "notFound": "Aucune partie trouvée pour le code {code}.",
+    "backHome": "Retour à l'accueil",
+    "cancelled": "Cette partie a été annulée. Redirection…",
+    "finished": "Cette partie est terminée. Redirection…",
+    "joinRoomTitle": "Rejoindre la partie {code}",
+    "namePlaceholder": "Votre nom",
+    "settingUpPitch": "Préparation du terrain…",
+    "squad": "Équipe ({count}/6)",
+    "kickOff": "Coup d'envoi",
+    "need2Players": "2 joueurs minimum",
+    "waitingHostKickoff": "En attente du coup d'envoi de l'hôte…",
+    "cancelLobby": "Annuler la partie",
+    "leaveLobby": "Quitter la partie",
+    "leaveMatchTitle": "Quitter la partie ?",
+    "leaveMatchMessage": "Quitter maintenant vous couchera et vous fera perdre la manche. Continuer ?",
+    "leaveConfirm": "Quitter",
+    "stay": "Rester"
+  },
+  "rules": {
+    "howToPlay": "Comment jouer",
+    "title": "Règles",
+    "gotIt": "Compris",
+    "puzzleTitle": "Le principe",
+    "puzzleBody": "Chaque manche, le serveur choisit secrètement un Joueur Mystère et affiche cinq autres footballeurs — les « cartes communes » — qui ont vraiment joué à ses côtés dans un club ou une sélection nationale.",
+    "streetsTitle": "Tours de mise",
+    "streetsBody": "Pré-flop (1 carte visible), Flop (+2), Turn (+1), River (+1) — un tour de check/suivre/relancer/coucher entre chaque étape, façon poker. Les cinq cartes communes sont toutes visibles à la River.",
+    "guessTitle": "Votre pronostic",
+    "guessBody": "Proposez — ou changez — votre pronostic secret à tout moment une fois les mises lancées. Rien n'est figé avant la révélation, et personne d'autre ne voit votre choix, seulement que vous en avez fait un.",
+    "showdownTitle": "Abattage & révélation",
+    "showdownBody": "Une fois que tous les joueurs encore en jeu ont pronostiqué (ou que le temps est écoulé), le Joueur Mystère est révélé. Pas besoin de le nommer exactement — celui dont le pronostic est lié au plus grand nombre des 5 cartes communes remporte la mise. En cas d'égalité, la mise est partagée ; si aucun pronostic n'est lié, la mise est reportée à la manche suivante.",
+    "matchTitle": "La partie",
+    "matchBody": "Les jetons sont conservés d'une manche à l'autre. La partie se termine une fois le nombre de manches convenu joué, ou dès qu'il ne reste qu'un seul joueur avec des jetons."
+  },
+  "guess": {
+    "secretGuess": "Pronostic secret",
+    "title": "Qui est le joueur mystère ?",
+    "hint": "Votre choix reste caché de tous les autres joueurs — vous pouvez le changer aussi souvent que vous voulez jusqu'à la révélation.",
+    "searchPlaceholder": "Chercher un footballeur…",
+    "noMatches": "Aucun résultat — essayez une autre orthographe"
+  },
+  "betting": {
+    "toCall": "À suivre :",
+    "fold": "Se coucher",
+    "check": "Check",
+    "call": "Suivre {amount}",
+    "raiseTo": "Relancer à {amount}",
+    "folded": "Vous vous êtes couché — vous observez le reste de la manche.",
+    "allIn": "Vous êtes all-in — installez-vous et regardez.",
+    "waitingOn": "En attente de {name}…"
+  },
+  "board": {
+    "community": "Cartes communes"
+  },
+  "card": {
+    "classified": "Confidentiel"
+  },
+  "seat": {
+    "you": "(vous)",
+    "bet": "Mise {amount}",
+    "folded": "Couché",
+    "allIn": "All-in",
+    "thinking": "Réfléchit…",
+    "guessed": "A pronostiqué"
+  },
+  "roomCode": {
+    "inviteCode": "Code d'invitation",
+    "share": "Partagez ce code — vos amis rejoignent depuis l'écran d'accueil."
+  },
+  "scoreboard": {
+    "standings": "Classement",
+    "out": "Éliminé"
+  },
+  "timer": {
+    "timeLeft": "Temps restant",
+    "seconds": "{count}s"
+  },
+  "yourGuess": {
+    "label": "Votre pronostic secret",
+    "change": "Changer de pronostic",
+    "propose": "Proposer un joueur"
+  },
+  "table": {
+    "stageDeal": "Deal",
+    "stagePre": "Pre",
+    "stageFlop": "Flop",
+    "stageTurn": "Turn",
+    "stageRiver": "River",
+    "stageShowdown": "Showdown",
+    "stageReveal": "Reveal",
+    "pot": "Pot"
+  },
+  "reveal": {
+    "finalWhistle": "Coup de sifflet final",
+    "mysteryPlayerWas": "Le joueur mystère était",
+    "correctGuess": "Bon pronostic",
+    "splitPot": "{names} se partagent la mise —",
+    "chipsEach": "jetons chacun",
+    "nobodyGuessed": "Personne n'a trouvé",
+    "carriesOver": "La mise de {amount} jetons est reportée à la manche suivante.",
+    "guesses": "Pronostics",
+    "startNextRound": "Démarrer la manche suivante",
+    "waitingHostNextRound": "En attente de l'hôte pour démarrer la manche suivante…",
+    "finalStandings": "Classement final",
+    "backToLobby": "Retour au lobby"
+  }
+}

@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col items-center gap-2">
-    <span class="field-label">Community</span>
+    <span class="field-label">{{ t('board.community') }}</span>
     <div class="flex gap-2 sm:gap-3 lg:gap-4">
       <div
         v-for="(id, i) in slots"
@@ -20,10 +20,12 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import PlayerCard from './PlayerCard.vue';
 import { useGameStore } from '@/stores/game';
 
 const store = useGameStore();
+const { t } = useI18n();
 
 const slots = computed<(number | null)[]>(() => {
     const revealed = store.gameState?.revealedCommunityPlayerIds ?? [];

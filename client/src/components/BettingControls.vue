@@ -1,15 +1,15 @@
 <template>
   <div v-if="visible" class="flex w-full flex-col items-center gap-3">
     <div v-if="store.amountToCall > 0" class="text-sm" style="color: var(--chalk-dim)">
-      To call: <span class="stat-mono font-semibold" style="color: var(--gold)">{{ store.amountToCall }}</span>
+      {{ t('betting.toCall') }} <span class="stat-mono font-semibold" style="color: var(--gold)">{{ store.amountToCall }}</span>
     </div>
 
     <div class="flex flex-wrap justify-center gap-2">
-      <button class="btn btn-danger btn-sm" @click="store.act('fold')">Fold</button>
-      <button v-if="store.amountToCall === 0" class="btn btn-ghost btn-sm" @click="store.act('check')">Check</button>
-      <button v-else class="btn btn-sky btn-sm" @click="store.act('call')">Call {{ store.amountToCall }}</button>
+      <button class="btn btn-danger btn-sm" @click="store.act('fold')">{{ t('betting.fold') }}</button>
+      <button v-if="store.amountToCall === 0" class="btn btn-ghost btn-sm" @click="store.act('check')">{{ t('betting.check') }}</button>
+      <button v-else class="btn btn-sky btn-sm" @click="store.act('call')">{{ t('betting.call', { amount: store.amountToCall }) }}</button>
       <button class="btn btn-kickoff btn-sm" :disabled="raiseAmount <= currentBet" @click="raise">
-        Raise to <span class="stat-mono">{{ raiseAmount }}</span>
+        {{ t('betting.raiseTo', { amount: raiseAmount }) }}
       </button>
     </div>
 
@@ -29,10 +29,12 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useGameStore } from '@/stores/game';
 import { BETTING_STAGES } from '@/api/types';
 
 const store = useGameStore();
+const { t } = useI18n();
 
 const currentBet = computed(() => store.gameState?.currentBet ?? 0);
 
@@ -58,10 +60,10 @@ function raise() {
 
 const waitingLabel = computed(() => {
     if (!isBettingStage.value) return null;
-    if (store.me?.isFolded) return 'You folded — watching the rest of this round.';
-    if (store.me?.isAllIn) return "You're all-in — sit back and watch.";
+    if (store.me?.isFolded) return t('betting.folded');
+    if (store.me?.isAllIn) return t('betting.allIn');
     if (store.gameState?.turnUserId != null) {
-        return `Waiting on ${store.playerName(store.gameState.turnUserId)}…`;
+        return t('betting.waitingOn', { name: store.playerName(store.gameState.turnUserId) });
     }
     return null;
 });

@@ -1,0 +1,134 @@
+{
+  "common": {
+    "rules": "Rules",
+    "close": "Close",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "you": "You",
+    "host": "Host",
+    "copy": "Copy",
+    "copied": "Copied"
+  },
+  "home": {
+    "subtitle": "Five community cards. One mystery footballer who played with all of them, revealed in the order they crossed paths. Bet your chips on how sure you are — then guess.",
+    "createRoom": "Create room",
+    "joinRoom": "Join room",
+    "back": "← Back",
+    "yourName": "Your name",
+    "namePlaceholder": "e.g. Kev",
+    "roundsThisMatch": "Rounds this match",
+    "settingUp": "Setting up…",
+    "createARoom": "Create a room",
+    "roomCode": "Room code",
+    "roomCodePlaceholder": "XXXXXX",
+    "joining": "Joining…"
+  },
+  "room": {
+    "round": "Round {current} / {max}",
+    "leave": "Leave",
+    "notFound": "No room found for code {code}.",
+    "backHome": "Back home",
+    "cancelled": "This room has been cancelled. Redirecting…",
+    "finished": "This match has ended. Redirecting…",
+    "joinRoomTitle": "Join room {code}",
+    "namePlaceholder": "Your name",
+    "settingUpPitch": "Setting up the pitch…",
+    "squad": "Squad ({count}/6)",
+    "kickOff": "Kick off",
+    "need2Players": "Need 2+ players",
+    "waitingHostKickoff": "Waiting for the host to kick off…",
+    "cancelLobby": "Cancel lobby",
+    "leaveLobby": "Leave lobby",
+    "leaveMatchTitle": "Leave match?",
+    "leaveMatchMessage": "Leaving now will fold you out and forfeit the round. Continue?",
+    "leaveConfirm": "Leave",
+    "stay": "Stay"
+  },
+  "rules": {
+    "howToPlay": "How to play",
+    "title": "Rules",
+    "gotIt": "Got it",
+    "puzzleTitle": "The puzzle",
+    "puzzleBody": "Each round the server secretly picks a Mystery Player and shows five other footballers — the \"community cards\" — who really played alongside them at some club or national team.",
+    "streetsTitle": "Betting streets",
+    "streetsBody": "Pre-flop (1 card up), Flop (+2), Turn (+1), River (+1) — a check/call/raise/fold round between each stage, poker-style. All five community cards are up by the River.",
+    "guessTitle": "Your guess",
+    "guessBody": "Submit — or change — your secret guess at any point once betting starts. It's never locked in until the reveal, and nobody else can see what you picked, only that you've picked something.",
+    "showdownTitle": "Showdown & reveal",
+    "showdownBody": "Once every non-folded player has guessed (or the showdown timer runs out), the Mystery Player is revealed. You don't have to name them exactly — whoever's guess played alongside the most of the 5 community cards wins the pot. Ties split it; if every guess links to none of them, the pot carries over to the next round.",
+    "matchTitle": "The match",
+    "matchBody": "Chips carry over from round to round. The match ends once the agreed number of rounds is played, or as soon as only one player still has chips."
+  },
+  "guess": {
+    "secretGuess": "Secret guess",
+    "title": "Who's the mystery player?",
+    "hint": "Your pick stays hidden from everyone else — you can change it as often as you like until the reveal.",
+    "searchPlaceholder": "Search a footballer…",
+    "noMatches": "No matches — try another spelling"
+  },
+  "betting": {
+    "toCall": "To call:",
+    "fold": "Fold",
+    "check": "Check",
+    "call": "Call {amount}",
+    "raiseTo": "Raise to {amount}",
+    "folded": "You folded — watching the rest of this round.",
+    "allIn": "You're all-in — sit back and watch.",
+    "waitingOn": "Waiting on {name}…"
+  },
+  "board": {
+    "community": "Community"
+  },
+  "card": {
+    "classified": "Classified"
+  },
+  "seat": {
+    "you": "(you)",
+    "bet": "Bet {amount}",
+    "folded": "Folded",
+    "allIn": "All-in",
+    "thinking": "Thinking…",
+    "guessed": "Guessed"
+  },
+  "roomCode": {
+    "inviteCode": "Invite code",
+    "share": "Share this code — friends join at the home screen."
+  },
+  "scoreboard": {
+    "standings": "Standings",
+    "out": "Out"
+  },
+  "timer": {
+    "timeLeft": "Time left",
+    "seconds": "{count}s"
+  },
+  "yourGuess": {
+    "label": "Your secret guess",
+    "change": "Change guess",
+    "propose": "Propose a player"
+  },
+  "table": {
+    "stageDeal": "Deal",
+    "stagePre": "Pre",
+    "stageFlop": "Flop",
+    "stageTurn": "Turn",
+    "stageRiver": "River",
+    "stageShowdown": "Showdown",
+    "stageReveal": "Reveal",
+    "pot": "Pot"
+  },
+  "reveal": {
+    "finalWhistle": "Final Whistle",
+    "mysteryPlayerWas": "The mystery player was",
+    "correctGuess": "Correct guess",
+    "splitPot": "{names} split the pot —",
+    "chipsEach": "chips each",
+    "nobodyGuessed": "Nobody guessed it",
+    "carriesOver": "The {amount} chip pot carries over to the next round.",
+    "guesses": "Guesses",
+    "startNextRound": "Start next round",
+    "waitingHostNextRound": "Waiting for the host to start the next round…",
+    "finalStandings": "Final standings",
+    "backToLobby": "Back to lobby"
+  }
+}

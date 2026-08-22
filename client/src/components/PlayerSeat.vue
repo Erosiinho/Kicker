@@ -14,25 +14,28 @@
     <div class="flex items-center gap-1.5">
       <span class="squad-number">{{ roomPlayer.seat + 1 }}</span>
       <span class="text-sm font-medium" :style="{ color: isMe ? 'var(--gold)' : 'var(--chalk)' }">
-        {{ roomPlayer.displayName }}<template v-if="isMe"> (you)</template>
+        {{ roomPlayer.displayName }}<template v-if="isMe"> {{ t('seat.you') }}</template>
       </span>
     </div>
 
     <div class="stat-mono text-sm" style="color: var(--gold)">{{ chips.toLocaleString() }}</div>
 
     <div class="flex min-h-[1.25rem] flex-wrap justify-center gap-1">
-      <span v-if="currentBet > 0" class="pill pill-gold">Bet {{ currentBet }}</span>
-      <span v-if="isFolded" class="pill pill-neutral">Folded</span>
-      <span v-else-if="isAllIn" class="pill pill-red">All-in</span>
-      <span v-else-if="isTurn" class="pill pill-sky">Thinking…</span>
-      <span v-else-if="hasGuessed" class="pill pill-gold">Guessed</span>
+      <span v-if="currentBet > 0" class="pill pill-gold">{{ t('seat.bet', { amount: currentBet }) }}</span>
+      <span v-if="isFolded" class="pill pill-neutral">{{ t('seat.folded') }}</span>
+      <span v-else-if="isAllIn" class="pill pill-red">{{ t('seat.allIn') }}</span>
+      <span v-else-if="isTurn" class="pill pill-sky">{{ t('seat.thinking') }}</span>
+      <span v-else-if="hasGuessed" class="pill pill-gold">{{ t('seat.guessed') }}</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { IRoomPlayer, PlayerState } from '@/api/types';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     roomPlayer: IRoomPlayer;

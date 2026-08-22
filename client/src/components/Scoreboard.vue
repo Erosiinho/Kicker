@@ -1,6 +1,6 @@
 <template>
   <div class="panel-turf gap-3">
-    <span class="field-label">Standings</span>
+    <span class="field-label">{{ t('scoreboard.standings') }}</span>
     <div class="flex flex-col gap-1.5">
       <div
         v-for="(row, i) in standings"
@@ -15,7 +15,7 @@
         >
           {{ store.playerName(row.userId) }}
         </span>
-        <span v-if="!row.isActive" class="pill pill-neutral">Out</span>
+        <span v-if="!row.isActive" class="pill pill-neutral">{{ t('scoreboard.out') }}</span>
         <span class="stat-mono text-sm font-semibold" style="color: var(--gold)">
           {{ row.chips.toLocaleString() }}
         </span>
@@ -26,9 +26,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useGameStore } from '@/stores/game';
 
 const store = useGameStore();
+const { t } = useI18n();
 
 // Live off gameState.players — the engine's running chip total, carried forward round
 // to round for the whole match, never reset between rounds (only WAITING resets a room).

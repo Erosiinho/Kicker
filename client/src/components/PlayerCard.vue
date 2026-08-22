@@ -18,14 +18,17 @@
     </template>
 
     <template v-else-if="resolvedState === 'hidden'">
-      <span class="stamp">Classified</span>
+      <span class="stamp">{{ t('card.classified') }}</span>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { IFootballPlayer } from '@/api/types';
+
+const { t } = useI18n();
 
 const props = withDefaults(
     defineProps<{

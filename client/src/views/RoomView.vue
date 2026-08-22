@@ -6,14 +6,15 @@
         <span class="brand-title text-lg sm:text-xl">KICKER</span>
       </router-link>
       <span v-if="store.room && store.gameState" class="pill pill-neutral">
-        Round {{ store.gameState.round || store.room.currentRound }} / {{ store.room.maxRounds }}
+        {{ t('room.round', { current: store.gameState.round || store.room.currentRound, max: store.room.maxRounds }) }}
       </span>
       <div class="flex items-center gap-2">
+        <LocaleSwitcher />
         <button v-if="store.room?.status !== 'IN_PROGRESS'" class="btn btn-ghost btn-sm" @click="showRules = true">
-          Rules
+          {{ t('common.rules') }}
         </button>
         <button v-if="store.room?.status === 'IN_PROGRESS'" class="btn btn-ghost btn-sm" @click="leaveInGame">
-          Leave
+          {{ t('room.leave') }}
         </button>
       </div>
     </header>
@@ -21,42 +22,48 @@
     <p v-if="store.error && !needsToJoin" class="pill pill-red mx-auto w-fit">{{ store.error }}</p>
 
     <div v-if="notFound" class="empty-state">
-      <p>No room found for code <span class="stat-mono">{{ code }}</span>.</p>
-      <router-link to="/" class="btn btn-ghost btn-sm">Back home</router-link>
+      <p>{{ t('room.notFound', { code }) }}</p>
+      <router-link to="/" class="btn btn-ghost btn-sm">{{ t('room.backHome') }}</router-link>
     </div>
 
     <div v-else-if="store.room?.status === 'CANCELLED'" class="empty-state">
-      <p>This room has been cancelled. Redirecting…</p>
+      <p>{{ t('room.cancelled') }}</p>
     </div>
 
     <div v-else-if="store.room?.status === 'FINISHED'" class="empty-state">
-      <p>This match has ended. Redirecting…</p>
+      <p>{{ t('room.finished') }}</p>
     </div>
 
     <div v-else-if="needsToJoin" class="mx-auto w-full max-w-sm">
       <div class="panel-turf">
-        <p class="field-label">Join room {{ code }}</p>
-        <input v-model="joinName" class="field-input" placeholder="Your name" maxlength="40" autocomplete="off" />
+        <p class="field-label">{{ t('room.joinRoomTitle', { code }) }}</p>
+        <input
+          v-model="joinName"
+          class="field-input"
+          :placeholder="t('room.namePlaceholder')"
+          maxlength="40"
+          autocomplete="off"
+        />
         <button class="btn btn-kickoff" :disabled="!joinName.trim() || joining" @click="joinNow">
-          {{ joining ? 'Joining…' : 'Join room' }}
+          {{ joining ? t('home.joining') : t('home.joinRoom') }}
         </button>
         <p v-if="joinError" class="pill pill-red w-fit self-center">{{ joinError }}</p>
       </div>
     </div>
 
-    <div v-else-if="!store.room" class="empty-state">Setting up the pitch…</div>
+    <div v-else-if="!store.room" class="empty-state">{{ t('room.settingUpPitch') }}</div>
 
     <template v-else>
       <div v-if="store.room.status === 'WAITING'" class="mx-auto flex w-full max-w-md flex-col items-center gap-6">
         <RoomCodeDisplay :code="store.room.code" />
         <div class="panel-turf w-full">
-          <p class="field-label">Squad ({{ store.room.players.length }}/6)</p>
+          <p class="field-label">{{ t('room.squad', { count: store.room.players.length }) }}</p>
           <ul class="flex flex-col gap-2">
             <li v-for="p in store.seatedPlayers" :key="p.userId" class="flex items-center gap-2">
               <span class="squad-number">{{ p.seat + 1 }}</span>
               <span class="flex-1 text-sm">{{ p.displayName }}</span>
-              <span v-if="p.userId === store.room.hostUserId" class="pill pill-gold">Host</span>
-              <span v-if="p.userId === store.yourUserId" class="pill pill-sky">You</span>
+              <span v-if="p.userId === store.room.hostUserId" class="pill pill-gold">{{ t('common.host') }}</span>
+              <span v-if="p.userId === store.yourUserId" class="pill pill-sky">{{ t('common.you') }}</span>
             </li>
           </ul>
           <button
@@ -65,13 +72,13 @@
             :disabled="store.room.players.length < 2"
             @click="store.ready()"
           >
-            {{ store.room.players.length < 2 ? 'Need 2+ players' : 'Kick off' }}
+            {{ store.room.players.length < 2 ? t('room.need2Players') : t('room.kickOff') }}
           </button>
           <p v-else class="text-center text-sm" style="color: var(--chalk-faint)">
-            Waiting for the host to kick off…
+            {{ t('room.waitingHostKickoff') }}
           </p>
           <button class="btn btn-ghost btn-sm" :class="{ 'btn-danger': store.isHost }" @click="store.leaveRoom()">
-            {{ store.isHost ? 'Cancel lobby' : 'Leave lobby' }}
+            {{ store.isHost ? t('room.cancelLobby') : t('room.leaveLobby') }}
           </button>
         </div>
       </div>
@@ -81,10 +88,10 @@
 
     <ConfirmModal
       :open="showLeaveConfirm"
-      title="Leave match?"
-      message="Leaving now will fold you out and forfeit the round. Continue?"
-      confirm-label="Leave"
-      cancel-label="Stay"
+      :title="t('room.leaveMatchTitle')"
+      :message="t('room.leaveMatchMessage')"
+      :confirm-label="t('room.leaveConfirm')"
+      :cancel-label="t('room.stay')"
       danger
       @confirm="confirmLeaveInGame"
       @cancel="showLeaveConfirm = false"
@@ -96,12 +103,14 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useGameStore } from '@/stores/game';
 import { useUserStore } from '@/stores/user';
 import RoomCodeDisplay from '@/components/RoomCodeDisplay.vue';
 import PokerTable from '@/components/PokerTable.vue';
 import ConfirmModal from '@/components/ConfirmModal.vue';
 import RulesModal from '@/components/RulesModal.vue';
+import LocaleSwitcher from '@/components/LocaleSwitcher.vue';
 import logo from '@/assets/logo.svg';
 
 const props = defineProps<{ code: string }>();
@@ -110,6 +119,7 @@ const code = props.code.toUpperCase();
 const router = useRouter();
 const store = useGameStore();
 const userStore = useUserStore();
+const { t } = useI18n();
 
 const notFound = ref(false);
 const needsToJoin = ref(false);

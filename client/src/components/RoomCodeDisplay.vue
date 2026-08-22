@@ -1,17 +1,19 @@
 <template>
   <div class="panel-turf items-center text-center">
-    <span class="field-label">Invite code</span>
+    <span class="field-label">{{ t('roomCode.inviteCode') }}</span>
     <div class="flex items-center gap-3">
       <span class="brand-title text-3xl sm:text-4xl">{{ code }}</span>
-      <button class="btn btn-ghost btn-sm" @click="copy">{{ copied ? 'Copied' : 'Copy' }}</button>
+      <button class="btn btn-ghost btn-sm" @click="copy">{{ copied ? t('common.copied') : t('common.copy') }}</button>
     </div>
-    <p class="text-sm" style="color: var(--chalk-dim)">Share this code — friends join at the home screen.</p>
+    <p class="text-sm" style="color: var(--chalk-dim)">{{ t('roomCode.share') }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const props = defineProps<{ code: string }>();
 const copied = ref(false);
 

@@ -8,64 +8,50 @@
       <div class="panel-turf w-full max-w-md" style="max-height: 85vh; overflow-y: auto">
         <div class="flex items-start justify-between gap-3">
           <div>
-            <span class="field-label">How to play</span>
-            <h2 class="brand-title text-2xl leading-none">Rules</h2>
+            <span class="field-label">{{ t('rules.howToPlay') }}</span>
+            <h2 class="brand-title text-2xl leading-none">{{ t('rules.title') }}</h2>
           </div>
-          <button class="btn btn-ghost btn-sm" aria-label="Close" @click="$emit('close')">✕</button>
+          <button class="btn btn-ghost btn-sm" :aria-label="t('common.close')" @click="$emit('close')">✕</button>
         </div>
 
         <div class="flex flex-col gap-4 text-sm" style="color: var(--chalk-dim)">
           <section class="flex flex-col gap-1">
-            <p class="field-label" style="color: var(--gold)">The puzzle</p>
-            <p>
-              Each round the server secretly picks a <strong style="color: var(--chalk)">Mystery Player</strong> and
-              shows five other footballers — the "community cards" — who really played alongside them at some club
-              or national team.
-            </p>
+            <p class="field-label" style="color: var(--gold)">{{ t('rules.puzzleTitle') }}</p>
+            <p>{{ t('rules.puzzleBody') }}</p>
           </section>
 
           <section class="flex flex-col gap-1">
-            <p class="field-label" style="color: var(--gold)">Betting streets</p>
-            <p>
-              Pre-flop (1 card up), Flop (+2), Turn (+1), River (+1) — a check/call/raise/fold round between each
-              stage, poker-style. All five community cards are up by the River.
-            </p>
+            <p class="field-label" style="color: var(--gold)">{{ t('rules.streetsTitle') }}</p>
+            <p>{{ t('rules.streetsBody') }}</p>
           </section>
 
           <section class="flex flex-col gap-1">
-            <p class="field-label" style="color: var(--gold)">Your guess</p>
-            <p>
-              Submit — or change — your secret guess at any point once betting starts. It's never locked in until
-              the reveal, and nobody else can see what you picked, only that you've picked something.
-            </p>
+            <p class="field-label" style="color: var(--gold)">{{ t('rules.guessTitle') }}</p>
+            <p>{{ t('rules.guessBody') }}</p>
           </section>
 
           <section class="flex flex-col gap-1">
-            <p class="field-label" style="color: var(--gold)">Showdown & reveal</p>
-            <p>
-              Once every non-folded player has guessed (or the showdown timer runs out), the Mystery Player is
-              revealed. You don't have to name them exactly — whoever's guess played alongside the most of the 5
-              community cards wins the pot. Ties split it; if every guess links to none of them, the pot carries
-              over to the next round.
-            </p>
+            <p class="field-label" style="color: var(--gold)">{{ t('rules.showdownTitle') }}</p>
+            <p>{{ t('rules.showdownBody') }}</p>
           </section>
 
           <section class="flex flex-col gap-1">
-            <p class="field-label" style="color: var(--gold)">The match</p>
-            <p>
-              Chips carry over from round to round. The match ends once the agreed number of rounds is played, or
-              as soon as only one player still has chips.
-            </p>
+            <p class="field-label" style="color: var(--gold)">{{ t('rules.matchTitle') }}</p>
+            <p>{{ t('rules.matchBody') }}</p>
           </section>
         </div>
 
-        <button class="btn btn-kickoff" @click="$emit('close')">Got it</button>
+        <button class="btn btn-kickoff" @click="$emit('close')">{{ t('rules.gotIt') }}</button>
       </div>
     </div>
   </Teleport>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
 defineProps<{ open: boolean }>();
 defineEmits<{ close: [] }>();
+
+const { t } = useI18n();
 </script>

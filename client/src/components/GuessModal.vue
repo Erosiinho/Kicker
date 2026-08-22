@@ -3,23 +3,23 @@
     <div class="panel-turf w-full max-w-md">
       <div class="flex items-start justify-between gap-3">
         <div>
-          <span class="field-label">Secret guess</span>
-          <h2 class="brand-title text-2xl leading-none">Who's the mystery player?</h2>
+          <span class="field-label">{{ t('guess.secretGuess') }}</span>
+          <h2 class="brand-title text-2xl leading-none">{{ t('guess.title') }}</h2>
         </div>
         <div class="flex items-start gap-2">
           <ShowdownTimer compact />
-          <button class="btn btn-ghost btn-sm" aria-label="Close" @click="close">✕</button>
+          <button class="btn btn-ghost btn-sm" :aria-label="t('common.close')" @click="close">✕</button>
         </div>
       </div>
 
       <p class="text-sm" style="color: var(--chalk-dim)">
-        Your pick stays hidden from everyone else — you can change it as often as you like until the reveal.
+        {{ t('guess.hint') }}
       </p>
 
       <input
         v-model="query"
         class="field-input"
-        placeholder="Search a footballer…"
+        :placeholder="t('guess.searchPlaceholder')"
         autocomplete="off"
         autofocus
       />
@@ -36,7 +36,7 @@
           <span class="text-sm">{{ p.name }}</span>
         </button>
         <p v-if="query.trim().length >= 2 && !searching && results.length === 0" class="empty-state">
-          No matches — try another spelling
+          {{ t('guess.noMatches') }}
         </p>
       </div>
     </div>
@@ -45,12 +45,14 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { api } from '@/api/api';
 import { useGameStore } from '@/stores/game';
 import ShowdownTimer from './ShowdownTimer.vue';
 import type { IFootballPlayer } from '@/api/types';
 
 const store = useGameStore();
+const { t } = useI18n();
 
 const query = ref('');
 const results = ref<IFootballPlayer[]>([]);

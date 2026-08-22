@@ -1,17 +1,19 @@
 <template>
   <div v-if="secondsLeft !== null" class="scoreboard shrink-0" :class="compact ? 'px-3 py-1.5' : 'mx-auto px-5 py-2'">
-    <span v-if="!compact" class="scoreboard-label">Time left</span>
-    <span class="scoreboard-value" :class="{ 'text-lg': compact }">{{ secondsLeft }}s</span>
+    <span v-if="!compact" class="scoreboard-label">{{ t('timer.timeLeft') }}</span>
+    <span class="scoreboard-value" :class="{ 'text-lg': compact }">{{ t('timer.seconds', { count: secondsLeft }) }}</span>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useGameStore } from '@/stores/game';
 
 withDefaults(defineProps<{ compact?: boolean }>(), { compact: false });
 
 const store = useGameStore();
+const { t } = useI18n();
 
 const now = ref(Date.now());
 let tick: ReturnType<typeof setInterval> | undefined;
