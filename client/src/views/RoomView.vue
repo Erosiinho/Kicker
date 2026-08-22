@@ -2,15 +2,20 @@
   <div class="app-shell">
     <header class="flex items-center justify-between">
       <router-link to="/" class="flex items-center gap-2">
-        <span class="brand-crest text-sm">⚽</span>
+        <img :src="logo" alt="Kicker crest" class="h-8 w-8 sm:h-9 sm:w-9" />
         <span class="brand-title text-lg sm:text-xl">KICKER</span>
       </router-link>
       <span v-if="store.room && store.gameState" class="pill pill-neutral">
         Round {{ store.gameState.round || store.room.currentRound }} / {{ store.room.maxRounds }}
       </span>
-      <button v-if="store.room?.status === 'IN_PROGRESS'" class="btn btn-ghost btn-sm" @click="leaveInGame">
-        Quitter
-      </button>
+      <div class="flex items-center gap-2">
+        <button v-if="store.room?.status !== 'IN_PROGRESS'" class="btn btn-ghost btn-sm" @click="showRules = true">
+          Rules
+        </button>
+        <button v-if="store.room?.status === 'IN_PROGRESS'" class="btn btn-ghost btn-sm" @click="leaveInGame">
+          Leave
+        </button>
+      </div>
     </header>
 
     <p v-if="store.error && !needsToJoin" class="pill pill-red mx-auto w-fit">{{ store.error }}</p>
@@ -73,6 +78,18 @@
 
       <PokerTable v-else />
     </template>
+
+    <ConfirmModal
+      :open="showLeaveConfirm"
+      title="Leave match?"
+      message="Leaving now will fold you out and forfeit the round. Continue?"
+      confirm-label="Leave"
+      cancel-label="Stay"
+      danger
+      @confirm="confirmLeaveInGame"
+      @cancel="showLeaveConfirm = false"
+    />
+    <RulesModal :open="showRules" @close="showRules = false" />
   </div>
 </template>
 
@@ -83,6 +100,9 @@ import { useGameStore } from '@/stores/game';
 import { useUserStore } from '@/stores/user';
 import RoomCodeDisplay from '@/components/RoomCodeDisplay.vue';
 import PokerTable from '@/components/PokerTable.vue';
+import ConfirmModal from '@/components/ConfirmModal.vue';
+import RulesModal from '@/components/RulesModal.vue';
+import logo from '@/assets/logo.svg';
 
 const props = defineProps<{ code: string }>();
 const code = props.code.toUpperCase();
@@ -135,15 +155,22 @@ watch(
     },
 );
 
+const showLeaveConfirm = ref(false);
+const showRules = ref(false);
+
 function leaveInGame() {
-    if (window.confirm('Quitter maintenant vous fera coucher et sortira de la partie. Continuer ?')) {
-        store.leaveRoom();
-    }
+    showLeaveConfirm.value = true;
 }
 
-// Fermeture d'onglet/rafraîchissement/navigation externe pendant une partie en cours : le
-// navigateur ignore tout texte personnalisé et affiche sa propre popup native, mais preventDefault
-// + returnValue est le déclencheur requis (Chrome exige returnValue, les autres s'en contentent).
+function confirmLeaveInGame() {
+    showLeaveConfirm.value = false;
+    store.leaveRoom();
+}
+
+// Closing the tab/refreshing/navigating away mid-match: the browser ignores any custom text and
+// shows its own native popup regardless — there's no way to swap in our own modal here — but
+// preventDefault + returnValue is still the required trigger (Chrome insists on returnValue,
+// everyone else is happy with just preventDefault).
 function handleBeforeUnload(e: BeforeUnloadEvent) {
     if (store.room?.status !== 'IN_PROGRESS') return;
     e.preventDefault();

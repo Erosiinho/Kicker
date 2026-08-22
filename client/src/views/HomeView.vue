@@ -1,5 +1,9 @@
 <template>
   <div class="app-shell-narrow">
+    <div class="flex justify-end">
+      <button class="btn btn-ghost btn-sm" @click="showRules = true">Rules</button>
+    </div>
+
     <div class="brand-lockup flex-col gap-3 text-center">
       <img :src="logo" alt="Kicker crest" class="brand-crest-img" width="72" height="72" />
       <h1 class="brand-title">KICKER</h1>
@@ -80,6 +84,8 @@
 
       <p v-if="error" class="pill pill-red w-fit self-center">{{ error }}</p>
     </div>
+
+    <RulesModal :open="showRules" @close="showRules = false" />
   </div>
 </template>
 
@@ -88,12 +94,14 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGameStore } from '@/stores/game';
 import { useUserStore } from '@/stores/user';
+import RulesModal from '@/components/RulesModal.vue';
 import logo from '@/assets/logo.svg';
 
 const router = useRouter();
 const store = useGameStore();
 const userStore = useUserStore();
 
+const showRules = ref(false);
 const mode = ref<'choose' | 'create' | 'join'>('choose');
 const displayName = ref(userStore.displayName);
 const roomCode = ref('');
