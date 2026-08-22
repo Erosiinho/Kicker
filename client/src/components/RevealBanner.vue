@@ -16,8 +16,9 @@
     <div v-if="winnerNames.length > 0" class="flex flex-col items-center gap-1">
       <span class="pill pill-gold">{{ t('reveal.correctGuess') }}</span>
       <p style="color: var(--chalk)">
-        {{ t('reveal.splitPot', { names: winnerNames.join(', ') }) }}
-        <span class="stat-mono font-semibold" style="color: var(--gold)">{{ reveal.potAwarded }}</span> {{ t('reveal.chipsEach') }}
+        {{ t(winnerNames.length > 1 ? 'reveal.splitPot' : 'reveal.wonPot', { names: winnerNames.join(', ') }) }}
+        <span class="stat-mono font-semibold" style="color: var(--gold)">{{ reveal.potAwarded }}</span>
+        {{ winnerNames.length > 1 ? t('reveal.chipsEach') : t('reveal.chips') }}
       </p>
     </div>
     <div v-else class="flex flex-col items-center gap-1">
